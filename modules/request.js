@@ -110,34 +110,50 @@ class Request {
         .sender
         .send('request-error-' + opts['hash'], "Blacklist URL");
     }
+    let reqContentType = "form";
     let _request = superagent.post(opts['url']);
     // 设置headers
     _request.set('User-Agent', USER_AGENT.getRandom());
     // 自定义headers
     for (let _ in opts.headers) {
+      if (_.toLocaleLowerCase() == 'content-type') {
+        reqContentType = opts.headers[_];
+      }
       _request.set(_, opts.headers[_]);
     }
     // 自定义body
     let _postData = Object.assign({}, opts.body, opts.data);
     if (opts['useChunk'] == 1) {
       logger.debug("request with Chunked");
-      let _postarr = [];
-      for (var key in _postData) {
-        if (_postData.hasOwnProperty(key)) {
-          let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-            return unescape($1);
-          }); // 后续可能需要二次处理的在这里追加
-          _postarr.push(`${key}=${_tmp}`);
+      let antstream;
+      if (opts['useRaw'] == 1) {
+        // raw 模式 data 部分仅发送 pwd 键下的数据
+        let _tmp = encodeURIComponent(opts.data[opts['pwd']]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
+          return unescape($1);
+        });
+        antstream = new AntRead(_tmp, {
+          'step': parseInt(opts['chunkStepMin']),
+          'stepmax': parseInt(opts['chunkStepMax'])
+        });
+      } else {
+        let _postarr = [];
+        for (var key in _postData) {
+          if (_postData.hasOwnProperty(key)) {
+            let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
+              return unescape($1);
+            }); // 后续可能需要二次处理的在这里追加
+            _postarr.push(`${key}=${_tmp}`);
+          }
         }
+        antstream = new AntRead(_postarr.join("&"), {
+          'step': parseInt(opts['chunkStepMin']),
+          'stepmax': parseInt(opts['chunkStepMax'])
+        });
       }
-      let antstream = new AntRead(_postarr.join("&"), {
-        'step': parseInt(opts['chunkStepMin']),
-        'stepmax': parseInt(opts['chunkStepMax'])
-      });
       let _datasuccess = false; // 表示是否是 404 类shell
       _request
         .proxy(APROXY_CONF['uri'])
-        .type('form')
+        .type(reqContentType)
         // .set('Content-Type', 'application/x-www-form-urlencoded')
         .timeout(opts.timeout || REQ_TIMEOUT)
         .ignoreHTTPS(opts['ignoreHTTPS'])
@@ -188,40 +204,47 @@ class Request {
       // 通过替换函数方式来实现发包方式切换, 后续可改成别的
       const old_send = _request.send;
       let _postarr = [];
-      if (opts['useMultipart'] == 1) {
-        _request.send = _request.field;
-        for (var key in _postData) {
-          if (_postData.hasOwnProperty(key)) {
-            let _tmp = String(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-              return unescape($1)
-            });
-            _postarr[key] = _tmp;
-          }
-        }
+      if (opts['useRaw'] == 1) {
+        let _tmp = String(opts.data[opts['pwd']]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
+          return unescape($1);
+        });
+        _postarr = _tmp;
       } else {
-        if(opts['addMassData']==1){
-          for (let i = 0; i < randomInt(num_min, num_max); i++) {  //将混淆流量放入到payload数组中
-            _postData[randomString(randomInt(varname_min, varname_max))] = randomString(randomInt(data_min, data_max));
+        if (opts['useMultipart'] == 1) {
+          _request.send = _request.field;
+          for (var key in _postData) {
+            if (_postData.hasOwnProperty(key)) {
+              let _tmp = String(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
+                return unescape($1)
+              });
+              _postarr[key] = _tmp;
+            }
           }
-          _postData=randomDict(_postData);
-          //logger.debug(_postData);
-        }
-        _request.send = old_send;
-        for (var key in _postData) {
-          if (_postData.hasOwnProperty(key)) {
-            let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-              return unescape($1)
-            }); // 后续可能需要二次处理的在这里追加
-            _postarr.push(`${key}=${_tmp}`);
+        } else {
+          if(opts['addMassData']==1){
+            for (let i = 0; i < randomInt(num_min, num_max); i++) {  //将混淆流量放入到payload数组中
+              _postData[randomString(randomInt(varname_min, varname_max))] = randomString(randomInt(data_min, data_max));
+            }
+            _postData=randomDict(_postData);
+            //logger.debug(_postData);
           }
+          _request.send = old_send;
+          for (var key in _postData) {
+            if (_postData.hasOwnProperty(key)) {
+              let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
+                return unescape($1)
+              }); // 后续可能需要二次处理的在这里追加
+              _postarr.push(`${key}=${_tmp}`);
+            }
+          }
+          //console.log(_postarr);
+          //logger.debug(_postarr);
+          _postarr = _postarr.join('&');
         }
-        //console.log(_postarr);
-        //logger.debug(_postarr);
-        _postarr = _postarr.join('&');
       }
       _request
         .proxy(APROXY_CONF['uri'])
-        .type('form')
+        .type(reqContentType)
         // 超时
         .timeout(opts.timeout || REQ_TIMEOUT)
         // 忽略HTTPS
@@ -292,34 +315,49 @@ class Request {
     let indexStart = -1;
     let indexEnd = -1;
     let tempData = [];
-
+    let reqContentType = "form";
     let _request = superagent.post(opts['url']);
     // 设置headers
     _request.set('User-Agent', USER_AGENT.getRandom());
     // 自定义headers
     for (let _ in opts.headers) {
+      if (_.toLocaleLowerCase() == 'content-type') {
+        reqContentType = opts.headers[_];
+      }
       _request.set(_, opts.headers[_]);
     }
     // 自定义body
     let _postData = Object.assign({}, opts.body, opts.data);
     if (opts['useChunk'] == 1) {
       logger.debug("request with Chunked");
-      let _postarr = [];
-      for (var key in _postData) {
-        if (_postData.hasOwnProperty(key)) {
-          let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-            return unescape($1);
-          }); // 后续可能需要二次处理的在这里追加
-          _postarr.push(`${key}=${_tmp}`);
+      let antstream;
+      if (opts['useRaw'] == 1) {
+        // raw 模式 data 部分仅发送 pwd 键下的数据
+        let _tmp = encodeURIComponent(opts.data[opts['pwd']]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
+          return unescape($1);
+        });
+        antstream = new AntRead(_tmp, {
+          'step': parseInt(opts['chunkStepMin']),
+          'stepmax': parseInt(opts['chunkStepMax'])
+        });
+      } else {
+        let _postarr = [];
+        for (var key in _postData) {
+          if (_postData.hasOwnProperty(key)) {
+            let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
+              return unescape($1);
+            }); // 后续可能需要二次处理的在这里追加
+            _postarr.push(`${key}=${_tmp}`);
+          }
         }
+        antstream = new AntRead(_postarr.join("&"), {
+          'step': parseInt(opts['chunkStepMin']),
+          'stepmax': parseInt(opts['chunkStepMax'])
+        });
       }
-      let antstream = new AntRead(_postarr.join("&"), {
-        'step': parseInt(opts['chunkStepMin']),
-        'stepmax': parseInt(opts['chunkStepMax'])
-      });
       _request
         .proxy(APROXY_CONF['uri'])
-        .type('form')
+        .type(reqContentType)
         .ignoreHTTPS(opts['ignoreHTTPS'])
         .parse((res, callback) => {
           res.pipe(through((chunk) => {
@@ -358,38 +396,45 @@ class Request {
       // 通过替换函数方式来实现发包方式切换, 后续可改成别的
       const old_send = _request.send;
       let _postarr = [];
-      if (opts['useMultipart'] == 1) {
-        _request.send = _request.field;
-        for (var key in _postData) {
-          if (_postData.hasOwnProperty(key)) {
-            let _tmp = String(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-              return unescape($1)
-            });
-            _postarr[key] = _tmp;
-          }
-        }
+      if (opts['useRaw'] == 1) {
+        let _tmp = String(opts.data[opts['pwd']]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
+          return unescape($1);
+        });
+        _postarr = _tmp;
       } else {
-        if(opts['addMassData'] == 1){
-          for (let i = 0; i < randomInt(num_min, num_max); i++) {  //将混淆流量放入到payload数组中
-            _postData[randomString(randomInt(varname_min, varname_max))] = randomString(randomInt(data_min, data_max));
+        if (opts['useMultipart'] == 1) {
+          _request.send = _request.field;
+          for (var key in _postData) {
+            if (_postData.hasOwnProperty(key)) {
+              let _tmp = String(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
+                return unescape($1)
+              });
+              _postarr[key] = _tmp;
+            }
           }
-                    _postData=randomDict(_postData);
-          //logger.debug(_postData);
-        }
-        _request.send = old_send;
-        for (var key in _postData) {
-          if (_postData.hasOwnProperty(key)) {
-            let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-              return unescape($1)
-            }); // 后续可能需要二次处理的在这里追加
-            _postarr.push(`${key}=${_tmp}`);
+        } else {
+          if(opts['addMassData'] == 1){
+            for (let i = 0; i < randomInt(num_min, num_max); i++) {  //将混淆流量放入到payload数组中
+              _postData[randomString(randomInt(varname_min, varname_max))] = randomString(randomInt(data_min, data_max));
+            }
+                      _postData=randomDict(_postData);
+            //logger.debug(_postData);
           }
+          _request.send = old_send;
+          for (var key in _postData) {
+            if (_postData.hasOwnProperty(key)) {
+              let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
+                return unescape($1)
+              }); // 后续可能需要二次处理的在这里追加
+              _postarr.push(`${key}=${_tmp}`);
+            }
+          }
+          _postarr = _postarr.join('&');
         }
-        _postarr = _postarr.join('&');
       }
       _request
         .proxy(APROXY_CONF['uri'])
-        .type('form')
+        .type(reqContentType)
         // 设置超时会导致文件过大时写入出错 .timeout(timeout) 忽略HTTPS
         .ignoreHTTPS(opts['ignoreHTTPS'])
         .send(_postarr)
