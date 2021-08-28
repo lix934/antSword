@@ -45,85 +45,44 @@ class Encoders {
       icon: 'plus-circle',
       id: 'new',
       openAll: true,
-      options: [{
-        id: 'new_asp',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "ASP"
-      }, {
-        id: 'new_aspx',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "ASPX"
-      }, {
-        id: 'new_php',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "PHP"
-      }, {
-        id: 'new_jsp',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "JSP"
-      }, {
-        id: 'new_jspjs',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "JSPJS"
-      }, {
-        id: 'new_cmdlinux',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "CMDLINUX"
-      }, {
-        type: 'separator'
-      }, {
-        id: 'new_custom',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "Custom"
-      }, {
-        type: 'separator'
-      }, {
-        id: 'new_php_rsa',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "PHP RSA"
-      }]
+      options: ((items)=>{
+        let ret = [];
+        items.map((_) => {
+          ret.push({
+            id: `new_${antSword.noxss(_.toLocaleLowerCase())}`,
+            icon: 'file-code-o',
+            type: 'button',
+            text: antSword.noxss(_.toUpperCase())
+          });
+        });
+        ret = ret.concat([{
+          type: 'separator'
+        }, {
+          id: 'new_php_rsa',
+          icon: 'file-code-o',
+          type: 'button',
+          text: "PHP RSA"
+        }]);
+        return ret;
+      })(antSword["core_types"]),
     }, {
       type: 'buttonSelect',
       text: LANG['toolbar']['new_decoder'],
       icon: 'plus-circle',
       id: 'new_decoder',
       openAll: true,
-      options: [{
-        id: 'new_php_decoder',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "PHP"
-      }, {
-        id: 'new_jsp_decoder',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "JSP"
-      }, {
-        id: 'new_jspjs_decoder',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "JSPJS"
-      }, {
-        id: 'new_cmdlinux_decoder',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "CMDLINUX"
-      }, {
-        type: 'separator'
-      }, {
-        id: 'new_custom_decoder',
-        icon: 'file-code-o',
-        type: 'button',
-        text: "Custom"
-      }]
+      options: ((items)=>{
+        let ret = [];
+        items.map((_) => {
+          ret.push({
+            id: `new_${antSword.noxss(_.toLocaleLowerCase())}_decoder`,
+            icon: 'file-code-o',
+            type: 'button',
+            text: antSword.noxss(_.toUpperCase())
+          });
+        });
+        return ret;
+      })(antSword["core_types"]),
     }, {
       type: 'separator'
     }, {
@@ -154,43 +113,6 @@ class Encoders {
 
     toolbar.attachEvent("onClick", (id) => {
       switch (id) {
-        case "new_asp":
-          that.createEncoder(id);
-          break;
-        case "new_aspx":
-          that.createEncoder(id);
-          break;
-        case "new_jsp":
-          that.createEncoder(id);
-          break;
-        case "new_jspjs":
-          that.createEncoder(id);
-          break;
-        case "new_cmdlinux":
-          that.createEncoder(id);
-          break;
-        case "new_php":
-        case "new_php_rsa":
-          that.createEncoder(id);
-          break;
-        case "new_custom":
-          that.createEncoder(id);
-          break;
-        case "new_php_decoder":
-          that.createEncoder(id, 'decoder');
-          break;
-        case "new_jsp_decoder":
-          that.createEncoder(id, 'decoder');
-          break;
-        case "new_jspjs_decoder":
-          that.createEncoder(id, 'decoder');
-          break;
-        case "new_cmdlinux_decoder":
-          that.createEncoder(id, 'decoder');
-          break;
-        case "new_custom_decoder":
-          that.createEncoder(id, 'decoder');
-          break;
         case "edit":
           that.editEncoder();
           break;
@@ -204,6 +126,13 @@ class Encoders {
           antSword
             .shell
             .openExternal("https://github.com/AntSwordProject/AwesomeEncoder");
+          break;
+        default:
+          if(id.indexOf("decoder")>-1) {
+            that.createEncoder(id, 'decoder');
+          } else {
+            that.createEncoder(id);
+          }
           break;
       }
     });
@@ -256,7 +185,7 @@ class Encoders {
             break
           case 2:
             // type
-            if (nValue != "asp" && nValue != "aspx" && nValue != "php" && nValue != "jsp"&& nValue != "jspjs"&& nValue != "cmdlinux"&&nValue != "custom") {
+            if (antSword['core_types'].indexOf(nValue) == -1) {
               toastr.error(LANG['message']["etype_error"], LANG_T['error']);
               return
             }
@@ -264,10 +193,10 @@ class Encoders {
               toastr.error(LANG['message']['ename_duplicate'], LANG_T['error']);
               return;
             }
-            if (oedtype === "decoder" && nValue != "php" && nValue != "custom") {
-              toastr.error("Not Support", LANG_T["error"]);
-              return;
-            }
+            // if (oedtype === "decoder" && nValue != "php" && nValue != "custom") {
+            //   toastr.error("Not Support", LANG_T["error"]);
+            //   return;
+            // }
             fs.renameSync(oepath, path.join(remote.process.env.AS_WORKDIR, `antData/encoders/${nValue}/${oedtype}/${oename}.js`));
             toastr.success(LANG['message']["retype_success"], LANG_T["success"]);
             break
