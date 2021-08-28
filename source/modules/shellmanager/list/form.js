@@ -268,22 +268,19 @@ class Form {
           "aspx": /.+\.as(px|mx)/,
           "asp": /.+\.(as(p|a|hx)|c(dx|er))/,
           "jsp": /.+\.(jsp[x]?)/,
-          "jsp": /.+\.(jsp[x]?)/,
           "custom": /.+\.((jsp[x]?)|cgi)/
         }
         let typecombo = form.getCombo('type');
-        if (file_match.php.test(id) == true) {
-          typecombo.selectOption(typecombo.getOption('php').index);
-        } else if (file_match.aspx.test(id) == true) {
-          typecombo.selectOption(typecombo.getOption('aspx').index);
-        } else if (file_match.asp.test(id) == true) {
-          typecombo.selectOption(typecombo.getOption('asp').index);
-        } else if (file_match.jsp.test(id) == true) {
-          typecombo.selectOption(typecombo.getOption('jsp').index);
-        } else if (file_match.jsp.test(id) == true) {
-          typecombo.selectOption(typecombo.getOption('jspjs').index);
-        } else if (file_match.custom.test(id) == true) {
-          typecombo.selectOption(typecombo.getOption('custom').index);
+        let lasttype = typecombo.getSelected();
+        for (const key in file_match) {
+          if(file_match[key].test(id) == true) {
+            // phpraw jspjs 时不改变类型
+            if(lasttype.indexOf(key)>-1){
+              break;
+            }
+            typecombo.selectOption(typecombo.getOption(key).index);
+            break;
+          }
         }
       }
 

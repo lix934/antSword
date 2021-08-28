@@ -349,6 +349,7 @@ class Base {
         // 发送请求数据
         .send('request', {
           url: this.__opts__['url'],
+          pwd: this.__opts__['pwd'],
           hash: hash,
           data: opt['data'],
           tag_s: opt['tag_s'],
@@ -362,6 +363,7 @@ class Base {
           addMassData: (this.__opts__['otherConf'] || {})['add-MassData'] === 1,
           randomPrefix: parseInt((this.__opts__['otherConf'] || {})['random-Prefix']),
           useRandomVariable: (this.__opts__['otherConf'] || {})['use-random-variable'] === 1,
+          useRaw: this.__opts__['type'].endsWith("raw"),
           timeout: parseInt((this.__opts__['otherConf'] || {})['request-timeout']),
           headers: (this.__opts__['httpConf'] || {})['headers'] || {},
           body: (this.__opts__['httpConf'] || {})['body'] || {}
