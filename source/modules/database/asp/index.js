@@ -650,7 +650,6 @@ class ASP {
     let sql = "";
     switch (conf['type']) {
       case "oracle":
-        // sql = `SELECT * FROM ${db}.${table} WHERE ROWNUM=0`;
         sql = `SELECT COLUMN_NAME,DATA_TYPE,DATA_LENGTH FROM ALL_TAB_COLUMNS WHERE OWNER='${db}' AND TABLE_NAME='${table}' ORDER BY COLUMN_ID`;
         break;
       case 'sqlserver':

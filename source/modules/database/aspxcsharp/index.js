@@ -92,7 +92,7 @@ class ASPXCSHARP {
               case 'sqlserver':
               case 'mssql':
               case 'sqlsrv':
-                sql = `SELECT TOP 20 [${column}] FROM [${table}] ORDER BY 1 DESC;`;
+                sql = `SELECT TOP 20 [${column}] FROM [${db}].dbo.[${table}] ORDER BY 1 DESC;`;
                 break;
               case 'oracle':
               case 'oracle_oci8':
@@ -670,21 +670,37 @@ class ASPXCSHARP {
           };
           _ = antSword.unxss(_);
           const _column = Buffer
-            .from(_.substr(0, _.lastIndexOf(' ')))
+            .from(_)
             .toString('base64');
           this
             .tree
             .insertNewItem(`table::${id}:${_db}:${_table}`, `column::${id}:${_db}:${_table}:${_column}`, antSword.noxss(_), null, this.manager.list.imgs[3], this.manager.list.imgs[3], this.manager.list.imgs[3]);
         });
+
+        let sql = "";
+        switch (conf['type']) {
+          case "oracle":
+            sql = `SELECT COLUMN_NAME,DATA_TYPE,DATA_LENGTH FROM ALL_TAB_COLUMNS WHERE OWNER='${db}' AND TABLE_NAME='${table}' ORDER BY COLUMN_ID`;
+            break;
+          case 'sqlserver':
+          case 'sqloledb_1':
+          case 'sqloledb_1_sspi':
+            sql = `USE [${this.dbconf['database']}];SELECT TOP 0 * FROM ${table}`;
+            break;
+          case 'mysql':
+            sql = `SELECT * FROM ${table} LIMIT 0,0;`;
+            break;
+          default:
+            sql = `SELECT TOP 1 * FROM ${table} ORDER BY 1 DESC`;
+            break;
+        }
         // 更新编辑器SQL语句
         this
           .manager
           .query
           .editor
           .session
-          .setValue(conf['type'] === 'oracle' ?
-            `SELECT * FROM (SELECT A.*,ROWNUM N FROM ${db}.${table} A ORDER BY 1 DESC) WHERE N>0 AND N<=20` :
-            `SELECT * FROM ${db}.${table} ORDER BY 1 DESC LIMIT 0,20;`);
+          .setValue(sql);
         this
           .manager
           .list
