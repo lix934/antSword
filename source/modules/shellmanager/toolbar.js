@@ -15,15 +15,18 @@ class Toolbar {
 
   constructor(cell, manager) {
     var self = this;
-    cell.hideHeader();
-    cell.setHeight(43);
+    self.max_shotcut_plugin = 8;
+
+    // cell.hideHeader();
+    // cell.setHeight(43);
+    // cell.fixSize(1, 0);
     let lang = antSword.storage('language', false, navigator.language.substr(0, 2));
     this.lang = (lang == 'en') ? '_en' : '';
 
     // Create toolbar
     let toolbar = cell.attachToolbar();
-    toolbar.setIconSize(32);
-    toolbar.attachEvent("onClick", function (id) {
+    // toolbar.setIconSize(24);
+    toolbar.attachEvent("onClick", function(id) {
       console.log(id);
       if (id == 'setting') {
         self.settingPane();
@@ -66,6 +69,7 @@ class Toolbar {
     var plugsData = [];
     try {
       var plugsList = JSON.parse(antSword.storage('toolbar', false, '[]'));
+      plugsList = plugsList.slice(0, this.max_shotcut_plugin);
       plugsList.forEach((plug) => {
         if (plug in antSword["plugins"]) {
           p = antSword["plugins"][plug]["info"];
@@ -104,7 +108,7 @@ class Toolbar {
     let win = new WIN({
       title: LANG['setting']['text'],
       height: 450,
-      width: 400
+      width: 300
     });
     let layout = win.win.attachLayout('1C');
     let cell = layout.cells('a');
@@ -112,52 +116,73 @@ class Toolbar {
     let plugsForm = cell.attachForm();
     var plugsData = [];
     try {
-      var i = 1;
+      var i = 0;
       var plugs = JSON.parse(antSword.storage('toolbar', false, '[]'));
       for (let plug in antSword["plugins"]) {
         p = antSword["plugins"][plug]["info"];
         plugsData.push({
           type: "checkbox",
-          label: antSword.noxss(p["name" + this.lang] || p["name"]),
+          label: `<i class="fa fa-${antSword.noxss(p['icon'])}"></i> ${antSword.noxss(p["name" + this.lang] || p["name"])}`,
           name: plug,
           checked: plugs.indexOf(plug) != -1
         });
-        plugsData.push({
-          type: 'newcolumn',
-        });
+        // if (i % 2 == 1) {
+        //   plugsData.push({
+        //     type: 'newcolumn',
+        //   });
+        // }
+        // i++;
       }
     } catch (e) {
       toastr.error(e, LANG_T['error']);
     }
     plugsForm.loadStruct([{
       type: "settings",
-      position: "label-right"
+      position: "label-right",
+      labelLeft: 25,
+      inputLeft: 25
     }, {
       type: "fieldset",
       name: "Setting",
-      label: LANG['setting']['text'],
+      offsetLeft: 20,
+      label: LANG['setting']['pluginlist'],
       list: plugsData
-    }, {
-      type: "button",
-      name: "toolbar_setting_save",
-      value: "Save",
-      width: 378
     }])
 
-    var eventId = plugsForm.attachEvent("onButtonClick", (name) => {
-      if (name == 'toolbar_setting_save') {
-        var save_data = []
-        var _formvals = plugsForm.getValues();
-        for (let v in _formvals) {
-          if (_formvals[v])
-            save_data.push(v)
-        }
-        // Save and Reload Toolbar
-        antSword.storage('toolbar', save_data);
-        antSword.modules.shellmanager.toolbar.reloadToolbar()
+    const toolbar = cell.attachToolbar();
+    toolbar.loadStruct([{
+      type: "button",
+      id: "toolbar_setting_save",
+      text: LANG['setting']['save'],
+      icon: "save",
+    }, {
+      type: 'button',
+      id: 'toolbar_setting_clear',
+      text: LANG['setting']['clear'],
+      icon: 'remove'
+    }])
+    toolbar.attachEvent("onClick", (id) => {
+      switch (id) {
+        case 'toolbar_setting_save':
+          var save_data = [];
+          var _formvals = plugsForm.getValues();
+          for (let v in _formvals) {
+            if (_formvals[v])
+              save_data.push(v)
+          }
+          if (save_data.length > this.max_shotcut_plugin) {
+            toastr.error(LANG['setting']['error_max'], LANG_T['error']);
+            return;
+          }
+          // Save and Reload Toolbar
+          antSword.storage('toolbar', save_data);
+          antSword.modules.shellmanager.toolbar.reloadToolbar()
+          win.close();
+          break;
+        case 'toolbar_setting_clear':
+          plugsForm.clear();
+          break;
       }
-      plugsForm.detachEvent(eventId);
-      win.close()
     });
   }
 

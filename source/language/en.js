@@ -205,10 +205,14 @@ module.exports = {
       }
     },
     toolbar: {
-      select: 'Please select at least one shell',
+      select: 'Please select the WebShell to execute first',
       setting: {
         text: 'Setting',
-        title: 'Setting pligins which you want to show'
+        pluginlist: 'Plugin List(Select up to 8)',
+        title: 'Set the plugins you want to add to the toolbar',
+        save: 'Save',
+        clear: 'Clear',
+        error_max: 'Up to 8 popular plugins can be added',
       }
     }
   },
