@@ -205,10 +205,14 @@ module.exports = {
       }
     },
     toolbar: {
-      select: '至少选择一个 webshell 吧',
+      select: '请先选中要执行的WebShell',
       setting: {
         text: '设置',
-        title: '设置你要添加到工具栏的插件'
+        pluginlist: '插件列表(最多选8个)',
+        title: '设置你要添加到工具栏的插件',
+        save: '保存',
+        clear: '清空',
+        error_max: '最多可添加8个常用插件'
       }
     }
   },

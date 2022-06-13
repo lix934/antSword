@@ -13,13 +13,13 @@ class ShellManager {
     const tabbar = antSword['tabbar'];
     tabbar.addTab('tab_shellmanager', '<i class="fa fa-th-large"></i>', null, null, true, false);
     const cell = tabbar.cells('tab_shellmanager');
-    const layout = cell.attachLayout('3T');
+    const layout = cell.attachLayout('2U');
     // 初始化顶侧栏：工具栏 - 插件
-    this.toolbar = new Toolbar(layout.cells('a'), this);
+    this.toolbar = new Toolbar(layout, this);
     // 初始化左侧栏：数据
-    this.list = new List(layout.cells('b'), this);
+    this.list = new List(layout.cells('a'), this);
     // 初始化右侧栏：目录
-    this.category = new Category(layout.cells('c'), this);
+    this.category = new Category(layout.cells('b'), this);
 
     this.searchPop = null;
     this.searchForm = null;
@@ -57,7 +57,7 @@ class ShellManager {
       try {
         RegExp(sdata['searchtext']);
       } catch (e) {
-        var tmpstr = sdata['searchtext'].replace(/([\$\(\)\*\+\.\[\?\\\^\{\|])/g, function ($, $1) {
+        var tmpstr = sdata['searchtext'].replace(/([\$\(\)\*\+\.\[\?\\\^\{\|])/g, function($, $1) {
           return `\\${$1}`;
         });
         sdata['searchtext'] = tmpstr;
@@ -170,7 +170,7 @@ class ShellManager {
       type: "input",
       name: "searchtext"
     }];
-    searchPop.attachEvent("onShow", function () {
+    searchPop.attachEvent("onShow", function() {
       if (that.searchForm == null) {
         that.searchForm = searchPop.attachForm(formData);
         // that.searchForm.attachEvent("onButtonClick", function(){   searchPop.hide();
