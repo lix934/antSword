@@ -281,7 +281,7 @@ class Menubar {
       type: 'separator'
     }, {
       label: LANG['tray']['quit'],
-      click: this.app.quit.bind(this.app)
+      click: () => { this.app.exit(0); }
     }];
 
     this
