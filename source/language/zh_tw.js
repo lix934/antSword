@@ -393,6 +393,7 @@ module.exports = {
             }
           },
           preview: '預覽文件',
+          filehash: '文件哈希',
           edit: {
             title: '編輯文件',
             openwindow: '窗口打開',

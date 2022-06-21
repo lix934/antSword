@@ -269,7 +269,7 @@ class Files {
     $('.objbox').on('click', (e) => {
       bmenu.hide();
     });
-    grid.attachEvent('onRightClick', function (id, lid, event) {
+    grid.attachEvent('onRightClick', function(id, lid, event) {
 
       // 获取选中ID列表
       let _ids = (this.getSelectedId() || '').split(',');
@@ -462,6 +462,13 @@ class Files {
         disabled: !id || ids.length > 1 || !self.checkPreview(id),
         action: () => {
           manager.previewFile(id, this.getRowAttribute(_ids[0], 'fsize'));
+        }
+      }, {
+        text: LANG['grid']['contextmenu']['filehash'],
+        icon: 'fa fa-legal',
+        disabled: isFolder || !id || containsFolder,
+        action: () => {
+          manager.fileHash(id);
         }
       }, {
         divider: true

@@ -394,6 +394,7 @@ Hot Keys:
             }
           },
           preview: 'Preview',
+          filehash: 'FileHash',
           edit: {
             title: 'Edit',
             openwindow: 'Open in Window',

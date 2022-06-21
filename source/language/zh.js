@@ -394,6 +394,7 @@ module.exports = {
             }
           },
           preview: '预览文件',
+          filehash: '文件哈希',
           edit: {
             title: '编辑文件',
             openwindow: '窗口打开',

@@ -81,5 +81,12 @@ module.exports = (arg1, arg2, arg3) => ({
     }else{
       echo("0");
     };`.replace(/\n\s+/g, ''),
-  }
+  },
+
+  filehash: {
+    _: `$f=base64_decode("#{base64::path}");
+    echo("MD5\t".md5_file($f)."\n");
+    echo("SHA1\t".sha1_file($f)."\n");
+    `.replace(/\n\s+/g, ''),
+  },
 })

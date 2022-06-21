@@ -77,5 +77,9 @@ module.exports = (arg1, arg2, arg3) => ({
       fi;
       $ascurl #{path} #{url} && echo -n 1||echo -n 0;
     `.replace(/\n\s+/g, '')
-  }
+  },
+
+  filehash: {
+    _: ``.replace(/\n\s+/g, ''),
+  },
 })
