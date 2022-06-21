@@ -83,7 +83,11 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
     }
     while($reader.Read()){
       for($i=0; $i -lt $reader.FieldCount; $i++){
-        $sb.AppendFormat('{0}{1}',[System.Convert]::ToBase64String([System.Text.Encoding]::Default.GetBytes($reader.GetString($i))), $columnsep)|Out-Null;
+        if($reader.IsDBNull($i)){
+          $sb.AppendFormat('TlVMTA=={0}', $columnsep)|Out-Null;
+        }else{
+          $sb.AppendFormat('{0}{1}',[System.Convert]::ToBase64String([System.Text.Encoding]::Default.GetBytes($reader.GetValue($i).ToString())), $columnsep)|Out-Null;
+        }
       }
       $sb.Append($rowsep)|Out-Null;
     }
