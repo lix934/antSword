@@ -296,4 +296,9 @@ module.exports = (arg1, arg2, arg3) => ({
     output.append(WgetCode(z1, z2));
     `.replace(/\n\s+/g, ""),
   },
+
+  filehash: {
+    _: ``.replace(/\n\s+/g, ""),
+    [arg1]: '#{newbase64::path}',
+  },
 });

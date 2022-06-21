@@ -62,5 +62,9 @@ module.exports = () => ({
     _: 'L',
     'z1': '#{url}',
     'z2': '#{path}'
-  }
+  },
+  filehash: {
+    _: 'G',
+    'z1': '#{path}',
+  },
 })

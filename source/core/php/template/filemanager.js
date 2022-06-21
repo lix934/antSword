@@ -100,5 +100,14 @@ module.exports = (arg1, arg2, arg3) => ({
     };`.replace(/\n\s+/g, ''),
     [arg1]: "#{newbase64::url}",
     [arg2]: "#{newbase64::path}"
-  }
+  },
+
+  filehash: {
+    _: `$m=get_magic_quotes_gpc();
+    $f=base64_decode(substr($m?stripslashes($_POST["${arg1}"]):$_POST["${arg1}"],#randomPrefix#));
+    echo("MD5\t".md5_file($f)."\n");
+    echo("SHA1\t".sha1_file($f)."\n");
+    `.replace(/\n\s+/g, ''),
+    [arg1]: '#{newbase64::path}',
+  },
 })

