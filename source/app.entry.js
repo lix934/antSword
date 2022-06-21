@@ -75,7 +75,7 @@ const antSword = window.antSword = {
    * @type {Object}
    */
   core: {},
-    /**
+  /**
    * 核心模块类型列表
    * @type {Object}
    */
@@ -107,7 +107,7 @@ const antSword = window.antSword = {
     if (!value) {
       return localStorage.getItem(key) || def;
     };
-    if (typeof (value) === "object")
+    if (typeof(value) === "object")
       value = JSON.stringify(value);
 
     // 设置
@@ -168,7 +168,7 @@ const antSword = window.antSword = {
 };
 
 //核心模块类型列表
-antSword['core_types'] = ['asp','aspx','aspxcsharp','php', 'php4','phpraw','jsp','jspjs','cmdlinux','custom'];
+antSword['core_types'] = ['asp', 'aspx', 'aspxcsharp', 'php', 'php4', 'phpraw', 'jsp', 'jspjs', 'cmdlinux', 'pswindows', 'custom'];
 
 // 加载核心模板
 antSword['core'] = require('./core/');
@@ -177,7 +177,7 @@ antSword['core'] = require('./core/');
 antSword['language'] = require('./language/');
 
 // 加载编码
-antSword['encoders'] = (function () {
+antSword['encoders'] = (function() {
   var encoders = {};
   var encoders_path = {};
   for (var i in antSword['core_types']) {
@@ -190,7 +190,7 @@ antSword['encoders'] = (function () {
   !fs.existsSync(userencoder_path) ?
     fs.mkdirSync(userencoder_path) :
     null;
-    antSword['core_types'].map((t) => {
+  antSword['core_types'].map((t) => {
     !fs.existsSync(path.join(userencoder_path, `${t}`)) ?
       fs.mkdirSync(path.join(userencoder_path, `${t}`)) :
       null;
@@ -225,7 +225,7 @@ antSword['encoders'] = (function () {
 })();
 
 // 加载解码器
-antSword['decoders'] = (function () {
+antSword['decoders'] = (function() {
   var decoders = {};
   var decoders_path = {};
   for (var i in antSword['core_types']) {
@@ -238,7 +238,7 @@ antSword['decoders'] = (function () {
   !fs.existsSync(userdecoder_path) ?
     fs.mkdirSync(userdecoder_path) :
     null;
-    antSword['core_types'].map((t) => {
+  antSword['core_types'].map((t) => {
     !fs.existsSync(path.join(userdecoder_path, `${t}`)) ?
       fs.mkdirSync(path.join(userdecoder_path, `${t}`)) :
       null;
@@ -346,12 +346,12 @@ const groupLog = (opt, color) => {
 
 // 监听后端消息
 ipcRenderer
-  /**
-   * 刷新UI（shellmanager侧边栏
-   * @param  {[type]} 'reloadui' [description]
-   * @param  {[type]} (          [description]
-   * @return {[type]}            [description]
-   */
+/**
+ * 刷新UI（shellmanager侧边栏
+ * @param  {[type]} 'reloadui' [description]
+ * @param  {[type]} (          [description]
+ * @return {[type]}            [description]
+ */
   .on('reloadui', () => {
     setTimeout(() => {
       antSword

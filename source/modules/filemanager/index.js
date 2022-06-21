@@ -71,7 +71,7 @@ class FileManager {
       }).catch((err) => {
         this.cell.progressOff();
         this.cell.close();
-        toastr.error((typeof (err) === 'object') ? JSON.stringify(err) : String(err), LANG_T['error']);
+        toastr.error((typeof(err) === 'object') ? JSON.stringify(err) : String(err), LANG_T['error']);
       });
       // this.core.base.info((ret) => {
       //   this.initUI(ret);
@@ -501,7 +501,10 @@ class FileManager {
       value: antSword.noxss(oldmod),
       title: `<i class="fa fa-users"></i> ${LANG['chmod']['title']} (${antSword.noxss(name)})`,
     }, (value, i, e) => {
-      if (!value.match(/^[0-7]{4}$/)) {
+      if (this.core.constructor.name == "PSWINDOWS" && !value.match(/^(-|d)(-|a)(-|r)(-|h)(-|s)$/)) {
+        toastr.error("PS FileMode Pattern Error, eg: -arh-", LANG_T['error']);
+        return
+      } else if (this.core.constructor.name != "PSWINDOWS" && !value.match(/^[0-7]{4}$/)) {
         toastr.error(LANG['chmod']['check'], LANG_T['error']);
         return
       }
@@ -562,10 +565,9 @@ class FileManager {
         win.setText(`Preview File: ${antSword.noxss(remote_path)}`);
         let buff = fs.readFileSync(savepath);
         switch (filemime) {
-          default:
-            let data = Buffer.from(buff).toString('base64');
-            win.attachHTMLString(`<img style="width:100%" src="data:/${filemime};base64,${data}"/>`);
-            break;
+          default: let data = Buffer.from(buff).toString('base64');
+          win.attachHTMLString(`<img style="width:100%" src="data:/${filemime};base64,${data}"/>`);
+          break;
         }
         fs.unlink(savepath);
       } else {
@@ -652,15 +654,15 @@ class FileManager {
         fs.unlinkSync(filePath);
       }
       self.core.download(filePath, self.core.filemanager.download_file({
-        path: path
-      }), (_size) => {
-        // 计算进度百分比
-        down_size += _size;
-        let down_progress = parseInt(parseFloat(down_size / item.size).toFixed(2) * 100);
-        if (!(down_progress % 5)) {
-          task.update(down_progress + '%');
-        };
-      })
+          path: path
+        }), (_size) => {
+          // 计算进度百分比
+          down_size += _size;
+          let down_progress = parseInt(parseFloat(down_size / item.size).toFixed(2) * 100);
+          if (!(down_progress % 5)) {
+            task.update(down_progress + '%');
+          };
+        })
         .then((_size) => {
           if (_size === item.size) {
             task.success(LANG['download']['task']['success']);
@@ -946,69 +948,69 @@ class FileManager {
         icon: 'code',
         type: 'button'
       };
-      (_ === ext) ? _opt['selected'] = true : 0;
+      (_ === ext) ? _opt['selected'] = true: 0;
       _options.push(_opt);
     }
     toolbar.loadStruct([{
-      id: 'hinttext',
-      type: 'text',
-      text: hinttext
-    },
-    {
-      id: 'filepath',
-      type: 'buttonInput',
-      width: 500,
-      value: antSword.noxss(path),
-    },
-    {
-      type: 'separator'
-    },
-    {
-      type: 'spacer'
-    },
-    {
-      id: 'refresh',
-      type: 'button',
-      icon: 'refresh',
-      text: LANG['editor']['toolbar']['refresh']
-    },
-    {
-      id: 'save',
-      type: 'button',
-      icon: 'save',
-      text: LANG['editor']['toolbar']['save']
-    },
-    {
-      type: 'separator'
-    },
-    {
-      id: 'encode',
-      type: 'buttonSelect',
-      icon: 'language',
-      openAll: true,
-      text: LANG['editor']['toolbar']['encode'],
-      options: (() => {
-        let ret = [];
-        ENCODES.map((_) => {
-          let _opt_ = {
-            id: `encode_${_}`,
-            text: _,
-            icon: 'font',
-            type: 'button'
-          };
-          (_ === self.opts['encode'] ? _opt_['selected'] = true : 0);
-          ret.push(_opt_);
-        });
-        return ret;
-      })()
-    }, {
-      id: 'mode',
-      type: 'buttonSelect',
-      icon: 'th-list',
-      openAll: true,
-      text: LANG['editor']['toolbar']['mode'],
-      options: _options
-    },
+        id: 'hinttext',
+        type: 'text',
+        text: hinttext
+      },
+      {
+        id: 'filepath',
+        type: 'buttonInput',
+        width: 500,
+        value: antSword.noxss(path),
+      },
+      {
+        type: 'separator'
+      },
+      {
+        type: 'spacer'
+      },
+      {
+        id: 'refresh',
+        type: 'button',
+        icon: 'refresh',
+        text: LANG['editor']['toolbar']['refresh']
+      },
+      {
+        id: 'save',
+        type: 'button',
+        icon: 'save',
+        text: LANG['editor']['toolbar']['save']
+      },
+      {
+        type: 'separator'
+      },
+      {
+        id: 'encode',
+        type: 'buttonSelect',
+        icon: 'language',
+        openAll: true,
+        text: LANG['editor']['toolbar']['encode'],
+        options: (() => {
+          let ret = [];
+          ENCODES.map((_) => {
+            let _opt_ = {
+              id: `encode_${_}`,
+              text: _,
+              icon: 'font',
+              type: 'button'
+            };
+            (_ === self.opts['encode'] ? _opt_['selected'] = true : 0);
+            ret.push(_opt_);
+          });
+          return ret;
+        })()
+      }, {
+        id: 'mode',
+        type: 'buttonSelect',
+        icon: 'th-list',
+        openAll: true,
+        text: LANG['editor']['toolbar']['mode'],
+        options: _options
+      },
     ]);
     toolbar.setItemToolTip('hinttext', tooltip);
     toolbar.attachEvent('onClick', (id) => {
@@ -1139,6 +1141,61 @@ class FileManager {
       toastr.error(LANG['editor']['loadErr'](err), LANG_T['error']);
       win.close();
     });
+  }
+
+  // 计算文件 hash
+  fileHash(name) {
+    let self = this;
+    const remote_path = this.path + name;
+    const win = self.createWin({
+      title: 'FileHash: ' + antSword.noxss(remote_path),
+      width: 350,
+      height: 200,
+    });
+    let grid = win.attachGrid();
+    grid.clearAll();
+    grid.setHeader(`Algorithm,Hash`);
+    grid.setColTypes("ro,txt");
+    grid.setColSorting('str,str');
+    grid.setColumnMinWidth(50, 200);
+    grid.setInitWidths("80,*");
+    grid.setColAlign("center,left");
+    grid.setEditable(true);
+    grid.init();
+    win.progressOn();
+    self.core.request(
+        this.core.filemanager.filehash({
+          path: remote_path,
+        })
+      ).then((ret) => {
+        if (ret['text'].indexOf("ERROR://") > -1) {
+          throw ret["text"];
+        }
+        let _data = ret['text'].split('\n');
+        let data_arr = [];
+        for (let i = 0; i < _data.length; i++) {
+          let item = _data[i].split('\t');
+          if (item.length < 2) {
+            continue
+          }
+          data_arr.push({
+            id: i + 1,
+            data: [
+              antSword.noxss(item[0]),
+              antSword.noxss(item[1]),
+            ],
+          });
+        }
+        grid.parse({
+          'rows': data_arr,
+        }, 'json');
+        toastr.success(LANG_T['success'], LANG_T['success']);
+        win.progressOff();
+      })
+      .catch((err) => {
+        win.progressOff();
+        toastr.error(JSON.stringify(err), LANG_T['error']);
+      });
   }
 
   // 创建窗口
