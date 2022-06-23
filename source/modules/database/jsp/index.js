@@ -18,9 +18,9 @@ class JSP {
     // * 数据库驱动列表
     //
     this.conns = {
-      'mysql': 'com.mysql.jdbc.Driver\r\njdbc:mysql://localhost/test?user=root&password=123456',
+      'mysql': 'com.mysql.jdbc.Driver\r\njdbc:mysql://localhost:3306/information_schame?user=root&password=123456',
       'sqlserver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver\r\njdbc:sqlserver://127.0.0.1:1433;' +
-        'databaseName=test;user=sa;password=123456',
+        'databaseName=master;user=sa;password=123456',
       'oracle': 'oracle.jdbc.driver.OracleDriver\r\njdbc:oracle:thin:@127.0.0.1:1521/test\r\nuser' +
         '\r\npassword'
     };
@@ -70,17 +70,17 @@ class JSP {
           case 'conn':
             this.getDatabases(arr[1]);
             break;
-          // 获取数据库表名
+            // 获取数据库表名
           case 'database':
             let _db = arr[1].split(':');
             this.getTables(_db[0], Buffer.from(_db[1], 'base64').toString());
             break;
-          // 获取表名字段
+            // 获取表名字段
           case 'table':
             let _tb = arr[1].split(':');
             this.getColumns(_tb[0], Buffer.from(_tb[1], 'base64').toString(), Buffer.from(_tb[2], 'base64').toString());
             break;
-          // 生成查询SQL语句
+            // 生成查询SQL语句
           case 'column':
             let _co = arr[1].split(':');
             const db = Buffer.from(_co[1], 'base64').toString();
@@ -89,7 +89,7 @@ class JSP {
             let sql = "";
             switch (this.dbconf['type']) {
               case 'mysql':
-                sql = `SELECT \`${column}\` FROM \`${table}\` ORDER BY 1 DESC LIMIT 0,20;`;
+                sql = `SELECT \`${column}\` FROM \`${db}\`.\`${table}\` ORDER BY 1 DESC LIMIT 0,20;`;
                 break;
               case 'sqlserver':
               case 'mssql':
@@ -105,7 +105,7 @@ class JSP {
                 sql = `SELECT ${column} FROM ${table} ORDER BY 1 DESC LIMIT 20 OFFSET 0;`;
                 break;
               default:
-                sql = `SELECT \`${column}\` FROM \`${table}\` ORDER BY 1 DESC LIMIT 0,20;`;
+                sql = `SELECT \`${column}\` FROM \`${db}\`.\`${table}\` ORDER BY 1 DESC LIMIT 0,20;`;
                 break;
             }
             this
@@ -629,11 +629,7 @@ class JSP {
 
   // 获取字段
   getColumns(id, db, table) {
-    this
-      .manager
-      .list
-      .layout
-      .progressOn();
+    this.manager.list.layout.progressOn();
     // 获取配置
     const conf = antSword['ipcRenderer'].sendSync('shell-getDataConf', {
       _id: this.manager.opt['_id'],
@@ -654,12 +650,8 @@ class JSP {
           throw ret;
         }
         const arr = ret.split('\t');
-        const _db = Buffer
-          .from(db)
-          .toString('base64');
-        const _table = Buffer
-          .from(table)
-          .toString('base64');
+        const _db = Buffer.from(db).toString('base64');
+        const _table = Buffer.from(table).toString('base64');
         // 删除子节点
         this
           .tree
@@ -670,46 +662,46 @@ class JSP {
             return
           };
           _ = antSword.unxss(_);
-          const _column = Buffer
-            .from(_.substr(0, _.lastIndexOf(' ')))
-            .toString('base64');
+          const _column = Buffer.from(_.substr(0, _.lastIndexOf(' ') > 0 ? _.lastIndexOf(' ') : _.length)).toString('base64');
           this
             .tree
             .insertNewItem(`table::${id}:${_db}:${_table}`, `column::${id}:${_db}:${_table}:${_column}`, antSword.noxss(_), null, this.manager.list.imgs[3], this.manager.list.imgs[3], this.manager.list.imgs[3]);
         });
         // 更新编辑器SQL语句
-        this
-          .manager
-          .query
-          .editor
-          .session
-          .setValue(conf['type'] === 'oracle' ?
-            `SELECT * FROM (SELECT A.*,ROWNUM N FROM ${db}.${table} A ORDER BY 1 DESC) WHERE N>0 AND N<=20` :
-            `SELECT * FROM ${db}.${table} ORDER BY 1 DESC LIMIT 0,20;`);
-        this
-          .manager
-          .list
-          .layout
-          .progressOff();
+        let presql = "";
+        switch (this.dbconf['type']) {
+          case 'mssql':
+          case 'sqlsrv':
+            presql = `SELECT TOP 20 * from [${table}] ORDER BY 1 DESC;`;
+            break;
+          case 'oracle':
+          case 'oracle_oci8':
+            presql = `SELECT * FROM ${db}.${table} WHERE ROWNUM < 20 ORDER BY 1`;
+            break;
+          case 'postgresql':
+          case 'postgresql_pdo':
+            presql = `SELECT * FROM ${table} ORDER BY 1 DESC LIMIT 20 OFFSET 0;`;
+            break;
+          case 'sqlite3':
+          case 'sqlite_pdo':
+            presql = `SELECT * FROM "${db}"."${table}" ORDER BY 1 DESC limit 0,20;`;
+            break;
+          default:
+            presql = `SELECT * FROM \`${db}\`.\`${table}\` ORDER BY 1 DESC LIMIT 0,20;`;
+            break;
+        }
+        this.manager.query.editor.session.setValue(presql);
+        this.manager.list.layout.progressOff();
       })
       .catch((err) => {
         toastr.error(LANG['result']['error']['column'](err['status'] || JSON.stringify(err)), LANG_T['error']);
-        this
-          .manager
-          .list
-          .layout
-          .progressOff();
+        this.manager.list.layout.progressOff();
       });
   }
 
   // 执行SQL
   execSQL(sql) {
-    this
-      .manager
-      .query
-      .layout
-      .progressOn();
-
+    this.manager.query.layout.progressOn();
     this
       .core
       .request(this.core[`database_${this.dbconf['type']}`].query({
