@@ -298,7 +298,50 @@ module.exports = (arg1, arg2, arg3) => ({
   },
 
   filehash: {
-    _: ``.replace(/\n\s+/g, ""),
-    [arg1]: '#{newbase64::path}',
+    _: `
+    importPackage(Packages.java.security);
+    function getDigest(algorithm) {
+        return MessageDigest.getInstance(algorithm);
+    };
+    function getMd5Digest(){
+        return getDigest("MD5");
+    };
+    function updateDigest(digestObj, inputStream) {
+        var s = new Array(2048).join(".");
+        var buffer=s.getBytes();
+        var read = inputStream.read(buffer,0, 1024);
+        while(read > -1) {
+            digestObj.update(buffer,0, read);
+            read = inputStream.read(buffer,0, 1024);
+        }
+        return digestObj;
+    };
+    function digest(messageDigest, data){
+      return updateDigest(messageDigest, data).digest();  
+    };
+    function md5(inputStream){
+        return digest(getMd5Digest(), inputStream);
+    };
+    function md5Hex(inputStream) {
+        return encodeHex(md5(inputStream));
+    };
+    function encodeHex(bytes) {
+        var h = "0123456789ABCDEF";
+        var sb = new StringBuilder(bytes.length * 2);
+        for (var i = 0; i < bytes.length; i++) {
+            sb.append(h.charAt((bytes[i] & 0xf0) >> 4));
+            sb.append(h.charAt((bytes[i] & 0x0f) >> 0));
+        }
+        return sb.toString();
+    };
+    function FilehashCode(filePath) {
+        var s = "";
+        var md5s = md5Hex(new FileInputStream(filePath));
+        s += "MD5\\t" + md5s + "\\n";
+        return s;
+    };
+    var z1 = decode("#{newbase64::path}");
+    output.append(FilehashCode(z1));
+    `.replace(/\n\s+/g, ""),
   },
 });
