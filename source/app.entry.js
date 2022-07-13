@@ -362,6 +362,17 @@ ipcRenderer
         .setWidth(222);
     }, 555);
   })
+  .on('aproxy-update', (e, opt) => {
+    antSword['aproxyauth'] = (!opt['aproxyusername'] || !opt['aproxypassword']) ? '' : `${opt['aproxyusername']}:${opt['aproxypassword']}`;
+    antSword['aproxyuri'] = `${opt['aproxyprotocol']}:\/\/${antSword['aproxyauth']}${antSword['aproxyauth'] === ''
+  ? ''
+  : '@'}${opt['aproxyserver']}:${opt['aproxyport']}`;
+    antSword['aproxymode'] = opt['aproxymode'];
+    // antSword.modules.shellmanager.list.updateHeader();
+    antSword.modules.shellmanager.reloadData({
+      category: antSword.modules.shellmanager.category.sidebar.getActiveItem(),
+    });
+  })
   /**
    * 通知提示 Loader 更新
    * @param  {[type]} 'notification-loader-update' [description]

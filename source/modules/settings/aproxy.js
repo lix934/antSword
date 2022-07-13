@@ -116,7 +116,7 @@ class AProxy {
       }]
     }], true);
     form.enableLiveValidation(true);
-    form.attachEvent("onChange", function (name, value, is_checked) {
+    form.attachEvent("onChange", function(name, value, is_checked) {
       if (name == "aproxymode") {
         if (value == "manualproxy") {
           toolbar.enableItem('test');
@@ -140,15 +140,27 @@ class AProxy {
             localStorage.setItem('aproxyusername', formvals['username']);
             localStorage.setItem('aproxypassword', formvals['password']);
 
+            let aproxyauth = (!formvals['username'] || !formvals['password']) ? '' : `${formvals['username']}:${formvals['password']}`;
+            let aproxyuri = `${formvals['protocol']}:\/\/${aproxyauth}${aproxyauth === ''
+            ? '' : '@'}${formvals['server']}:${formvals['port']}`;
+            antSword['ipcRenderer'].send('aproxy', {
+              aproxymode: formvals['aproxymode'],
+              aproxyuri: aproxyuri,
+              aproxyprotocol: formvals['protocol'],
+              aproxyserver: formvals['server'],
+              aproxyport: formvals['port'],
+              aproxyusername: formvals['username'],
+              aproxypassword: formvals['password'],
+            });
             toastr.success(LANG['success'], LANG_T['success']);
             // 重启应用
-            layer.confirm(LANG['confirm']['content'], {
-              icon: 2,
-              shift: 6,
-              title: LANG['confirm']['title']
-            }, (_) => {
-              location.reload();
-            });
+            // layer.confirm(LANG['confirm']['content'], {
+            //   icon: 2,
+            //   shift: 6,
+            //   title: LANG['confirm']['title']
+            // }, (_) => {
+            //   location.reload();
+            // });
           } else {
             toastr.error(LANG['error'], LANG_T['error']);
           }
@@ -158,9 +170,9 @@ class AProxy {
             layer
               .prompt({
                 title: LANG['prompt']['title'],
-                value: 'http://uyu.us',
+                value: 'https://encrypted.google.com/',
                 formType: 0
-              }, function (testurl, index) {
+              }, function(testurl, index) {
                 layer.close(index);
                 var loadindex = layer.load(2, {
                   time: 6 * 1000
@@ -188,7 +200,7 @@ class AProxy {
                   toastr.success(LANG['prompt']['success'], LANG_T['success']);
                 }).send('aproxytest', {
                   hash: hash,
-                  url: testurl || 'http://uyu.us',
+                  url: testurl || 'https://encrypted.google.com/',
                   aproxyuri: _aproxyuri
                 });
               });

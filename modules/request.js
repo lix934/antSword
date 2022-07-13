@@ -19,6 +19,7 @@ const {
 let logger;
 // 请求UA
 const USER_AGENT = require('random-fake-useragent');
+const { unescape } = require('querystring');
 
 // 请求超时
 const REQ_TIMEOUT = 10000;
@@ -39,16 +40,17 @@ class Request {
     ipcMain.on('aproxytest', this.onAproxyTest.bind(this));
     ipcMain.on('request', this.onRequest.bind(this));
     ipcMain.on('download', this.onDownlaod.bind(this));
+    superagentProxy(superagent);
   }
 
   /**
-   * 加载代理配置
+   * 设置全局代理配置
    * @param  {Object} event ipcMain事件
    * @param  {Object} opts  代理配置
    * @return {[type]}       [description]
    */
   onAproxy(event, opts) {
-    logger.debug('aProxy::Set Proxy Mode -', APROXY_CONF['mode'] === 'manualproxy' ?
+    logger.debug('aProxy::Set Global Proxy Mode -', APROXY_CONF['mode'] === 'manualproxy' ?
       APROXY_CONF['uri'] :
       'noproxy');
 
@@ -56,11 +58,13 @@ class Request {
     APROXY_CONF['uri'] = opts['aproxyuri'];
 
     if (APROXY_CONF['mode'] === 'noproxy') {
-      return superagent.Request.prototype.proxy = function () {
-        return this
-      };
+      APROXY_CONF['uri'] = ''
+        //   return superagent.Request.prototype.proxy = function() {
+        //     return this
+        //   };
     }
-    superagentProxy(superagent);
+    // superagentProxy(superagent);
+    event.sender.send('aproxy-update', opts);
   }
 
   /**
@@ -76,7 +80,7 @@ class Request {
         .sender
         .send('request-error-' + opts['hash'], "Blacklist URL");
     }
-    superagentProxy(superagent);
+    // superagentProxy(superagent);
     superagent
       .get(opts['url'])
       .set('User-Agent', USER_AGENT.getRandom())
@@ -97,6 +101,60 @@ class Request {
       });
   }
 
+  // 设置headers
+  buildHeaders(request, opts) {
+    let self = this;
+    request.set('User-Agent', USER_AGENT.getRandom());
+    // 自定义headers
+    for (let _ in opts.headers) {
+      if (_.toLocaleLowerCase() == 'content-type') {
+        self.reqContentType = opts.headers[_];
+      }
+      request.set(_, opts.headers[_]);
+    }
+  }
+
+  /**
+   * 
+   * @param {object} opts 
+   * @returns object
+   * 
+   * 根据 opts 中的配置组装 http body
+   */
+  buildBody(opts = {}) {
+    let _postData = Object.assign({}, opts.body, opts.data);
+    if (opts['useRaw'] == 1) {
+      // raw 模式 data 部分仅发送 pwd 键下的数据
+      let _tmp = encodeURIComponent(opts.data[opts['pwd']]).replace(/asunescape\((.+?)\)/g, function($, $1) {
+        return unescape($1);
+      });
+      // return string
+      return _tmp;
+    } else {
+      let _postarr = [];
+      if (opts['addMassData'] == 1) {
+        for (let i = 0; i < randomInt(num_min, num_max); i++) { //将混淆流量放入到payload数组中
+          _postData[randomString(randomInt(varname_min, varname_max))] = randomString(randomInt(data_min, data_max));
+        }
+        _postData = randomDict(_postData);
+      }
+      for (var key in _postData) {
+        if (_postData.hasOwnProperty(key)) {
+          let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function($, $1) {
+            return unescape($1);
+          }); // 后续可能需要二次处理的在这里追加
+          _postarr.push(`${key}=${_tmp}`);
+        }
+      }
+      if (opts['useMultipart'] == 1) {
+        // return object {k: v}
+        return _postData;
+      }
+      // return array ["k1=v1","k2=v2"]
+      return _postarr;
+    }
+  }
+
   /**
    * 监听HTTP请求
    * @param  {Object} event ipcMain事件对象
@@ -105,169 +163,97 @@ class Request {
    */
   onRequest(event, opts) {
     logger.debug('onRequest::opts', opts);
+    let self = this;
     if (opts['url'].match(CONF.urlblacklist)) {
-      return event
-        .sender
-        .send('request-error-' + opts['hash'], "Blacklist URL");
+      return event.sender.send('request-error-' + opts['hash'], "Blacklist URL");
     }
-    let reqContentType = "form";
+    self.reqContentType = "form";
     let _request = superagent.post(opts['url']);
-    // 设置headers
-    _request.set('User-Agent', USER_AGENT.getRandom());
-    // 自定义headers
-    for (let _ in opts.headers) {
-      if (_.toLocaleLowerCase() == 'content-type') {
-        reqContentType = opts.headers[_];
-      }
-      _request.set(_, opts.headers[_]);
-    }
-    // 自定义body
-    let _postData = Object.assign({}, opts.body, opts.data);
+    self.buildHeaders(_request, opts);
+    let _datasuccess = false; // 表示是否是 404 类shell
+    _request = _request
+      .proxy(APROXY_CONF['uri'])
+      .type(self.reqContentType)
+      // .set('Content-Type', 'application/x-www-form-urlencoded')
+      .timeout(opts.timeout || REQ_TIMEOUT)
+      .ignoreHTTPS(opts['ignoreHTTPS'])
     if (opts['useChunk'] == 1) {
       logger.debug("request with Chunked");
       let antstream;
       if (opts['useRaw'] == 1) {
         // raw 模式 data 部分仅发送 pwd 键下的数据
-        let _tmp = encodeURIComponent(opts.data[opts['pwd']]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-          return unescape($1);
-        });
+        let _tmp = unescape(self.buildBody(opts));
         antstream = new AntRead(_tmp, {
           'step': parseInt(opts['chunkStepMin']),
           'stepmax': parseInt(opts['chunkStepMax'])
         });
       } else {
-        let _postarr = [];
-        for (var key in _postData) {
-          if (_postData.hasOwnProperty(key)) {
-            let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-              return unescape($1);
-            }); // 后续可能需要二次处理的在这里追加
-            _postarr.push(`${key}=${_tmp}`);
-          }
-        }
+        let _postarr = self.buildBody(opts);
         antstream = new AntRead(_postarr.join("&"), {
           'step': parseInt(opts['chunkStepMin']),
           'stepmax': parseInt(opts['chunkStepMax'])
         });
       }
-      let _datasuccess = false; // 表示是否是 404 类shell
-      _request
-        .proxy(APROXY_CONF['uri'])
-        .type(reqContentType)
-        // .set('Content-Type', 'application/x-www-form-urlencoded')
-        .timeout(opts.timeout || REQ_TIMEOUT)
-        .ignoreHTTPS(opts['ignoreHTTPS'])
-        .parse((res, callback) => {
-          this.parse(opts['tag_s'], opts['tag_e'], (chunk) => {
-            event
-              .sender
-              .send('request-chunk-' + opts['hash'], chunk);
+      _request.parse((res, callback) => {
+          self.parse(opts['tag_s'], opts['tag_e'], (chunk) => {
+            event.sender.send('request-chunk-' + opts['hash'], chunk);
           }, res, (err, ret) => {
-            let buff = ret ?
-              ret :
-              Buffer.from();
+            let buff = ret ? ret : Buffer.from();
             // 自动猜测编码
             let encoding = detectEncoding(buff, {
               defaultEncoding: "unknown"
             });
             logger.debug("detect encoding:", encoding);
-            encoding = encoding != "unknown" ?
-              encoding :
-              opts['encode'];
+            encoding = encoding != "unknown" ? encoding : opts['encode'];
             let text = iconv.decode(buff, encoding);
             if (err && text == "") {
-              return event
-                .sender
-                .send('request-error-' + opts['hash'], err);
+              return event.sender.send('request-error-' + opts['hash'], err);
             };
             // 回调数据
-            event
-              .sender
-              .send('request-' + opts['hash'], {
-                text: text,
-                buff: buff,
-                encoding: encoding
-              });
+            event.sender.send('request-' + opts['hash'], {
+              text: text,
+              buff: buff,
+              encoding: encoding
+            });
             _datasuccess = true;
             callback(null, ret);
           });
         })
         .on('error', (err) => {
           if (_datasuccess == false) {
-            return event
-              .sender
-              .send('request-error-' + opts['hash'], err);
+            return event.sender.send('request-error-' + opts['hash'], err);
           }
         });
       antstream.pipe(_request);
     } else {
       // 通过替换函数方式来实现发包方式切换, 后续可改成别的
-      const old_send = _request.send;
-      let _postarr = [];
+      const formdata_send = _request.send;
+      let _postarr = self.buildBody(opts);
+
       if (opts['useRaw'] == 1) {
-        let _tmp = String(opts.data[opts['pwd']]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-          return unescape($1);
-        });
-        _postarr = _tmp;
+        _postarr = unescape(_postarr);
       } else {
         if (opts['useMultipart'] == 1) {
-          _request.send = _request.field;
-          for (var key in _postData) {
-            if (_postData.hasOwnProperty(key)) {
-              let _tmp = String(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-                return unescape($1)
-              });
-              _postarr[key] = _tmp;
-            }
-          }
+          _request.send = _request.field; // multipart 下发送的是 Object
         } else {
-          if(opts['addMassData']==1){
-            for (let i = 0; i < randomInt(num_min, num_max); i++) {  //将混淆流量放入到payload数组中
-              _postData[randomString(randomInt(varname_min, varname_max))] = randomString(randomInt(data_min, data_max));
-            }
-            _postData=randomDict(_postData);
-            //logger.debug(_postData);
-          }
-          _request.send = old_send;
-          for (var key in _postData) {
-            if (_postData.hasOwnProperty(key)) {
-              let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-                return unescape($1)
-              }); // 后续可能需要二次处理的在这里追加
-              _postarr.push(`${key}=${_tmp}`);
-            }
-          }
-          //console.log(_postarr);
-          //logger.debug(_postarr);
-          _postarr = _postarr.join('&');
+          _request.send = formdata_send;
+          _postarr = _postarr.join('&'); // form-data 发送的是 key=value 字符串
         }
       }
       _request
-        .proxy(APROXY_CONF['uri'])
-        .type(reqContentType)
-        // 超时
-        .timeout(opts.timeout || REQ_TIMEOUT)
-        // 忽略HTTPS
-        .ignoreHTTPS(opts['ignoreHTTPS'])
         .send(_postarr)
         .buffer(true)
         .parse((res, callback) => {
-          this.parse(opts['tag_s'], opts['tag_e'], (chunk) => {
-            event
-              .sender
-              .send('request-chunk-' + opts['hash'], chunk);
+          self.parse(opts['tag_s'], opts['tag_e'], (chunk) => {
+            event.sender.send('request-chunk-' + opts['hash'], chunk);
           }, res, callback);
         })
         .end((err, ret) => {
           if (!ret) {
             // 请求失败 TIMEOUT
-            return event
-              .sender
-              .send('request-error-' + opts['hash'], err);
+            return event.sender.send('request-error-' + opts['hash'], err);
           }
-          let buff = ret.hasOwnProperty('body') ?
-            ret.body :
-            Buffer.from();
+          let buff = ret.hasOwnProperty('body') ? ret.body : Buffer.from();
           // 解码
           let text = "";
           // 自动猜测编码
@@ -275,23 +261,17 @@ class Request {
             defaultEncoding: "unknown"
           });
           logger.debug("detect encoding:", encoding);
-          encoding = encoding != "unknown" ?
-            encoding :
-            opts['encode'];
+          encoding = encoding != "unknown" ? encoding : opts['encode'];
           text = iconv.decode(buff, encoding);
           if (err && text == "") {
-            return event
-              .sender
-              .send('request-error-' + opts['hash'], err);
+            return event.sender.send('request-error-' + opts['hash'], err);
           };
           // 回调数据
-          event
-            .sender
-            .send('request-' + opts['hash'], {
-              text: text,
-              buff: buff,
-              encoding: encoding
-            });
+          event.sender.send('request-' + opts['hash'], {
+            text: text,
+            buff: buff,
+            encoding: encoding
+          });
         });
     }
   }
@@ -303,11 +283,10 @@ class Request {
    * @return {[type]}       [description]
    */
   onDownlaod(event, opts) {
+    let self = this;
     logger.debug('onDownlaod', opts);
     if (opts['url'].match(CONF.urlblacklist)) {
-      return event
-        .sender
-        .send('request-error-' + opts['hash'], "Blacklist URL");
+      return event.sender.send('request-error-' + opts['hash'], "Blacklist URL");
     }
     // 创建文件流
     const rs = fs.createWriteStream(opts['path']);
@@ -315,141 +294,89 @@ class Request {
     let indexStart = -1;
     let indexEnd = -1;
     let tempData = [];
-    let reqContentType = "form";
+    self.reqContentType = "form";
     let _request = superagent.post(opts['url']);
     // 设置headers
-    _request.set('User-Agent', USER_AGENT.getRandom());
-    // 自定义headers
-    for (let _ in opts.headers) {
-      if (_.toLocaleLowerCase() == 'content-type') {
-        reqContentType = opts.headers[_];
-      }
-      _request.set(_, opts.headers[_]);
-    }
-    // 自定义body
+    self.buildHeaders(_request, opts);
+    let _datasuccess = false; // 表示是否是 404 类shell
+    _request = _request
+      .proxy(APROXY_CONF['uri'])
+      .type(self.reqContentType)
+      .ignoreHTTPS(opts['ignoreHTTPS'])
+      // 自定义body
     let _postData = Object.assign({}, opts.body, opts.data);
     if (opts['useChunk'] == 1) {
       logger.debug("request with Chunked");
       let antstream;
       if (opts['useRaw'] == 1) {
         // raw 模式 data 部分仅发送 pwd 键下的数据
-        let _tmp = encodeURIComponent(opts.data[opts['pwd']]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-          return unescape($1);
-        });
+        let _tmp = unescape(self.buildBody(opts));
         antstream = new AntRead(_tmp, {
           'step': parseInt(opts['chunkStepMin']),
           'stepmax': parseInt(opts['chunkStepMax'])
         });
       } else {
-        let _postarr = [];
-        for (var key in _postData) {
-          if (_postData.hasOwnProperty(key)) {
-            let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-              return unescape($1);
-            }); // 后续可能需要二次处理的在这里追加
-            _postarr.push(`${key}=${_tmp}`);
-          }
-        }
+        let _postarr = self.buildBody(opts);
         antstream = new AntRead(_postarr.join("&"), {
           'step': parseInt(opts['chunkStepMin']),
           'stepmax': parseInt(opts['chunkStepMax'])
         });
       }
       _request
-        .proxy(APROXY_CONF['uri'])
-        .type(reqContentType)
-        .ignoreHTTPS(opts['ignoreHTTPS'])
         .parse((res, callback) => {
           res.pipe(through((chunk) => {
             // 判断数据流中是否包含后截断符？长度++
             let temp = chunk.indexOf(opts['tag_e']);
             if (temp !== -1) {
-              indexEnd = Buffer
-                .concat(tempData)
-                .length + temp;
+              indexEnd = Buffer.concat(tempData).length + temp;
             };
             tempData.push(chunk);
-            event
-              .sender
-              .send('download-progress-' + opts['hash'], chunk.length);
+            event.sender.send('download-progress-' + opts['hash'], chunk.length);
           }, () => {
             let tempDataBuffer = Buffer.concat(tempData);
-  
+
             indexStart = tempDataBuffer.indexOf(opts['tag_s']) || 0;
             // 截取最后的数据
             let finalData = Buffer.from(tempDataBuffer.slice(indexStart + opts['tag_s'].length, indexEnd), 'binary');
             // 写入文件流&&关闭
             rs.write(finalData);
             rs.close();
-            event
-              .sender
-              .send('download-' + opts['hash'], finalData.length);
+            event.sender.send('download-' + opts['hash'], finalData.length);
+            _datasuccess = true;
             // 删除内存数据
             finalData = tempDataBuffer = tempData = null;
           }))
         })
         .on('error', (err) => {
-          return event.sender.send('download-error-' + opts['hash'], err);
+          if (_datasuccess == false) {
+            return event.sender.send('download-error-' + opts['hash'], err);
+          }
         });
       antstream.pipe(_request);
     } else {
       // 通过替换函数方式来实现发包方式切换, 后续可改成别的
-      const old_send = _request.send;
-      let _postarr = [];
+      const formdata_send = _request.send;
+      let _postarr = self.buildBody(opts);
       if (opts['useRaw'] == 1) {
-        let _tmp = String(opts.data[opts['pwd']]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-          return unescape($1);
-        });
-        _postarr = _tmp;
+        _postarr = unescape(_postarr);
       } else {
         if (opts['useMultipart'] == 1) {
           _request.send = _request.field;
-          for (var key in _postData) {
-            if (_postData.hasOwnProperty(key)) {
-              let _tmp = String(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-                return unescape($1)
-              });
-              _postarr[key] = _tmp;
-            }
-          }
         } else {
-          if(opts['addMassData'] == 1){
-            for (let i = 0; i < randomInt(num_min, num_max); i++) {  //将混淆流量放入到payload数组中
-              _postData[randomString(randomInt(varname_min, varname_max))] = randomString(randomInt(data_min, data_max));
-            }
-                      _postData=randomDict(_postData);
-            //logger.debug(_postData);
-          }
-          _request.send = old_send;
-          for (var key in _postData) {
-            if (_postData.hasOwnProperty(key)) {
-              let _tmp = encodeURIComponent(_postData[key]).replace(/asunescape\((.+?)\)/g, function ($, $1) {
-                return unescape($1)
-              }); // 后续可能需要二次处理的在这里追加
-              _postarr.push(`${key}=${_tmp}`);
-            }
-          }
+          _request.send = formdata_send;
           _postarr = _postarr.join('&');
         }
       }
       _request
-        .proxy(APROXY_CONF['uri'])
-        .type(reqContentType)
-        // 设置超时会导致文件过大时写入出错 .timeout(timeout) 忽略HTTPS
-        .ignoreHTTPS(opts['ignoreHTTPS'])
         .send(_postarr)
         .pipe(through((chunk) => {
           // 判断数据流中是否包含后截断符？长度++
           let temp = chunk.indexOf(opts['tag_e']);
           if (temp !== -1) {
-            indexEnd = Buffer
-              .concat(tempData)
-              .length + temp;
+            indexEnd = Buffer.concat(tempData).length + temp;
           };
           tempData.push(chunk);
-          event
-            .sender
-            .send('download-progress-' + opts['hash'], chunk.length);
+          event.sender.send('download-progress-' + opts['hash'], chunk.length);
         }, () => {
           let tempDataBuffer = Buffer.concat(tempData);
 
@@ -459,9 +386,7 @@ class Request {
           // 写入文件流&&关闭
           rs.write(finalData);
           rs.close();
-          event
-            .sender
-            .send('download-' + opts['hash'], finalData.length);
+          event.sender.send('download-' + opts['hash'], finalData.length);
           // 删除内存数据
           finalData = tempDataBuffer = tempData = null;
         }))
@@ -666,21 +591,21 @@ function randomString(length) { // 生成随机字符串
   return result;
 }
 
-function randomInt(min, max) {   //生成指定范围内的随机数
+function randomInt(min, max) { //生成指定范围内的随机数
   return parseInt(Math.random() * (max - min + 1) + min, 10);
 }
 
-function randomDict(dic){
-  let tmparray=[]
-  for(let i in dic){
+function randomDict(dic) {
+  let tmparray = []
+  for (let i in dic) {
     tmparray.push(i)
   }
-  tmparray=tmparray.sort((a, b)=> { return Math.random() > 0.5 ? -1 : 1; })
-  let finaldata={}
+  tmparray = tmparray.sort((a, b) => { return Math.random() > 0.5 ? -1 : 1; })
+  let finaldata = {}
   tmparray.forEach(i => {
-      finaldata[i]=dic[i]
-});
-return finaldata
+    finaldata[i] = dic[i]
+  });
+  return finaldata
 }
 
 
