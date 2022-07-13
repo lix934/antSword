@@ -10,7 +10,7 @@ const fs = require('fs'),
   path = require('path'),
   CONF = require('./config'),
   Datastore = require('nedb'),
-  qqwry = require("geoips").info();
+  qqwry = require("geoips").info(path.join(__dirname, '../static/libs/qqwry.dat'));
 
 var logger;
 
@@ -50,15 +50,13 @@ class Database {
   }
 
   convertOptstoNedbQuery(opts = {}) {
-    var self = this;
-    if (opts instanceof Array) {
-      for (let i = 0; i < opts.length; i++) {
-        opts[i] = self.convertOptstoNedbQuery(opts[i]);
-      }
-    } else if (opts instanceof Object) {
-      Object
-        .keys(opts)
-        .map((f) => {
+      var self = this;
+      if (opts instanceof Array) {
+        for (let i = 0; i < opts.length; i++) {
+          opts[i] = self.convertOptstoNedbQuery(opts[i]);
+        }
+      } else if (opts instanceof Object) {
+        Object.keys(opts).map((f) => {
           if (opts[f] instanceof Object) {
             opts[f] = self.convertOptstoNedbQuery(opts[f]);
           }
@@ -69,15 +67,15 @@ class Database {
             opts[f] = new RegExp(opts[f], 'i');
           }
         });
+      }
+      return opts;
     }
-    return opts;
-  }
-  /**
-   * 查询shell数据
-   * @param  {Object} event ipcMain对象
-   * @param  {Object} opts  查询配置
-   * @return {[type]}       [description]
-   */
+    /**
+     * 查询shell数据
+     * @param  {Object} event ipcMain对象
+     * @param  {Object} opts  查询配置
+     * @return {[type]}       [description]
+     */
   findShell(event, opts = {}) {
     opts = this.convertOptstoNedbQuery(opts);
     logger.debug('findShell', opts);
@@ -460,42 +458,42 @@ class Database {
    * @param {Object} opts  配置（_id,data
    */
   addPluginDataConf(event, plugin, opts) {
-    logger.info('addPluginDataConf', plugin, opts);
-    // 1. 获取原配置列表
-    this
-      .cursor
-      .findOne({
-        _id: opts['_id']
-      }, (err, ret) => {
-        ret['plugins'] = ret['plugins'] || {};
-        let confs = ret['plugins'][plugin] || {};
-        // 随机Id（顺序增长
-        const random_id = parseInt(+new Date + Math.random() * 1000).toString(16);
-        // 添加到配置
-        confs[random_id] = opts['data'];
-        let setdata = {
-          utime: +new Date
-        }
-        setdata[`plugins.${plugin}`] = confs;
+      logger.info('addPluginDataConf', plugin, opts);
+      // 1. 获取原配置列表
+      this
+        .cursor
+        .findOne({
+          _id: opts['_id']
+        }, (err, ret) => {
+          ret['plugins'] = ret['plugins'] || {};
+          let confs = ret['plugins'][plugin] || {};
+          // 随机Id（顺序增长
+          const random_id = parseInt(+new Date + Math.random() * 1000).toString(16);
+          // 添加到配置
+          confs[random_id] = opts['data'];
+          let setdata = {
+            utime: +new Date
+          }
+          setdata[`plugins.${plugin}`] = confs;
 
-        // 更新
-        this
-          .cursor
-          .update({
-            _id: opts['_id']
-          }, {
-            $set: setdata
-          }, (_err, _ret) => {
-            event.returnValue = random_id;
-          });
-      });
-  }
-  /**
-   * 修改插件数据配置
-   * @param {Object} event ipcMain对象
-   * @param  {string} plugin 插件注册的名称
-   * @param {Object} opts  配置（_id,id,data
-   */
+          // 更新
+          this
+            .cursor
+            .update({
+              _id: opts['_id']
+            }, {
+              $set: setdata
+            }, (_err, _ret) => {
+              event.returnValue = random_id;
+            });
+        });
+    }
+    /**
+     * 修改插件数据配置
+     * @param {Object} event ipcMain对象
+     * @param  {string} plugin 插件注册的名称
+     * @param {Object} opts  配置（_id,id,data
+     */
   editPluginDataConf(event, plugin, opts) {
     logger.info('editPluginDataConf', plugin, opts);
     // 1. 获取原配置列表
