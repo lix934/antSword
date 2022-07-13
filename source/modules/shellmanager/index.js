@@ -51,9 +51,7 @@ class ShellManager {
    */
   reloadData(arg = {}) {
     if (this.searchPop.isVisible()) {
-      let sdata = this
-        .searchForm
-        .getValues();
+      let sdata = this.searchForm.getValues();
       try {
         RegExp(sdata['searchtext']);
       } catch (e) {
@@ -94,16 +92,10 @@ class ShellManager {
     }
     const _data = Data.get(arg);
     // 刷新UI::数据
-    this
-      .list
-      .grid
-      .clearAll();
-    this
-      .list
-      .grid
-      .parse({
-        'rows': _data['data']
-      }, 'json');
+    this.list.grid.clearAll();
+    this.list.grid.parse({
+      'rows': _data['data']
+    }, 'json');
     // 刷新UI::分类
     for (let _ in _data['category']) {
       // 目录存在，则更新bubble
@@ -124,11 +116,7 @@ class ShellManager {
         });
     }
     // 加载分类数据
-    this
-      .category
-      .sidebar
-      .items(arg['category'] || 'default')
-      .setActive(true);
+    this.category.sidebar.items(arg['category'] || 'default').setActive(true);
     // 更新标题
     this
       .category

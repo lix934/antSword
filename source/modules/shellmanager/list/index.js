@@ -31,7 +31,7 @@ class List {
    */
   updateHeader(num = 0) {
     let proxyhint = "";
-    if(antSword.aproxymode === "manualproxy") {
+    if (antSword.aproxymode === "manualproxy") {
       proxyhint = `  <i class="fa fa-paper-plane"></i> <span style="color:green;">Proxy On</span>`;
     }
     this
