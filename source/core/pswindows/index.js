@@ -7,6 +7,9 @@
 const Base = require('../base');
 
 class PSWINDOWS extends Base {
+  static get supportRawBody() {
+    return true;
+  }
   constructor(opts) {
     super(opts);
     // 解析模板

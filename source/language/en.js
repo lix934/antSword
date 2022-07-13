@@ -175,6 +175,8 @@ module.exports = {
       },
       otherConf: {
         nohttps: 'Ignore HTTPS certificate',
+        userawbody: 'Use RAW HTTP Body',
+        userawbodyNotSupport: 'The currently selected Shell type does not support RAW Body mode (RAW Shell Type no need it)',
         usemultipart: 'Use Multipart send payload',
         addMassData: 'Add garbage data in payload',
         randomPrefix: 'Random prefix length',

