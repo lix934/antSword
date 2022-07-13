@@ -66,10 +66,22 @@
 
 * 支持自定义 Content-Type, 默认是 `form`
 * Fix #307
+* 重新规整 `modules/request.js` 代码结构
 
 ### 设置模块
 
 * 优化了新增Core类型时，编码设置解析逻辑, 现在不需要再改该模块的源代码了
+* 优化全局代理设置, 代理在设置完后不需要再重启了
+
+### 其它
+
+* 更新纯真IP数据库为 2022/04/20 (https://github.com/out0fmemory/qqwry.dat)
+
+> 如需自己更新请下载后替换 `static/libs/qqwry.dat` 文件
+
+* 升级 superagent 到 6.1.0 (再高的版本需要高版本Electron支持)
+* 升级 superagent-proxy 到 v3.0.0
+
 
 ## 2021/07/25 `v(2.1.14)`
 

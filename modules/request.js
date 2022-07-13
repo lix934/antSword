@@ -30,6 +30,17 @@ const APROXY_CONF = {
   uri: ''
 }
 
+/**
+ * 忽略 HTTPS 证书校验 SuperAgent patch
+ * @param {bool} ignore 
+ * @api public 
+ */
+superagent.Request.prototype.ignoreHTTPS = function(ignore) {
+  this._ignoreHttps = !ignore;
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = ignore ? '0' : undefined;
+  return this;
+};
+
 class Request {
 
   constructor(electron) {
@@ -176,7 +187,7 @@ class Request {
       .type(self.reqContentType)
       // .set('Content-Type', 'application/x-www-form-urlencoded')
       .timeout(opts.timeout || REQ_TIMEOUT)
-      .ignoreHTTPS(opts['ignoreHTTPS'])
+      .ignoreHTTPS(opts['ignoreHTTPS']);
     if (opts['useChunk'] == 1) {
       logger.debug("request with Chunked");
       let antstream;
