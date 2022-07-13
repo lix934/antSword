@@ -273,9 +273,9 @@ class Form {
         let typecombo = form.getCombo('type');
         let lasttype = typecombo.getSelected();
         for (const key in file_match) {
-          if(file_match[key].test(id) == true) {
+          if (file_match[key].test(id) == true) {
             // phpraw jspjs 时不改变类型
-            if(lasttype.indexOf(key)>-1){
+            if (lasttype.indexOf(key) > -1) {
               break;
             }
             typecombo.selectOption(typecombo.getOption(key).index);
@@ -469,8 +469,10 @@ class Form {
    * @return {[type]}     [description]
    */
   _createOtherForm(arg) {
+    let self = this;
     const opt = Object.assign({}, {
       'ignore-https': 0,
+      'use-raw-body': 0,
       'use-multipart': 0,
       'add-MassData': 0,
       'random-Prefix': '2',
@@ -505,6 +507,11 @@ class Form {
           checked: opt['ignore-https'] === 1
         }, {
           type: "checkbox",
+          name: 'use-raw-body',
+          label: LANG['list']['otherConf']['userawbody'],
+          checked: opt['use-raw-body'] === 1
+        }, {
+          type: "checkbox",
           name: 'use-random-variable',
           label: LANG['list']['otherConf']['userandomvariable'],
           checked: opt['use-random-variable'] === 1
@@ -518,7 +525,7 @@ class Form {
           name: 'use-multipart',
           label: LANG['list']['otherConf']['usemultipart'],
           checked: opt['use-multipart'] === 1
-        },{
+        }, {
           type: 'fieldset',
           offsetLeft: 0,
           label: LANG['list']['otherConf']['chunk']['title'],
@@ -636,11 +643,10 @@ class Form {
               })
             });
             return ret;
-          })(['1', '2', '3', '5','10','15'])
+          })(['1', '2', '3', '5', '10', '15'])
         }, {
           type: "label",
           label: LANG['list']['otherConf']['uploadFragment']
-          
         }, {
           type: "combo",
           label: '/kb',
@@ -798,6 +804,17 @@ class Form {
       }], true);
     form.attachEvent('onChange', (name, value, state) => {
       switch (name) {
+        case 'use-raw-body':
+          let chosetype = self.baseForm.getItemValue("type");
+          if (!antSword.core[chosetype].supportRawBody && state == true) {
+            // 不支持，提示
+            layer.open({
+              title: LANG_T['info'],
+              content: LANG['list']['otherConf']['userawbodyNotSupport']
+            });
+            form.uncheckItem('use-raw-body');
+          }
+          break;
         case 'use-multipart':
           if (state == true && form.isItemChecked('use-chunk')) {
             form.uncheckItem('use-chunk');
@@ -807,10 +824,10 @@ class Form {
           if (state == true && form.isItemChecked('use-multipart')) {
             form.uncheckItem('use-multipart');
           }
-        // case 'add-MassData':
-        //   if (state == true && form.isItemChecked('add-MassData')) {
-        //     form.uncheckItem('add-MassData');
-        //   }
+          // case 'add-MassData':
+          //   if (state == true && form.isItemChecked('add-MassData')) {
+          //     form.uncheckItem('add-MassData');
+          //   }
           if (state == true) {
             layer.open({
               title: LANG_T['info'],
@@ -884,54 +901,54 @@ class Form {
     // 添加Header
     let _headerCount = 0;
     const _addHeader = (name = '', value = '') => {
-      _headerCount++;
-      form.addItem('header', {
-        type: "fieldset",
-        label: `#${_headerCount}`,
-        inputWidth: 480,
-        list: [{
-          type: "input",
-          name: `header-${_headerCount}_name`,
-          inputWidth: 350,
-          labelWidth: 50,
-          label: "Name",
-          value: name
-        }, {
-          type: "input",
-          name: `header-${_headerCount}_value`,
-          inputWidth: 350,
-          labelWidth: 50,
-          label: "Value",
-          value: value
-        }]
-      })
-    }
-    // 添加Body
+        _headerCount++;
+        form.addItem('header', {
+          type: "fieldset",
+          label: `#${_headerCount}`,
+          inputWidth: 480,
+          list: [{
+            type: "input",
+            name: `header-${_headerCount}_name`,
+            inputWidth: 350,
+            labelWidth: 50,
+            label: "Name",
+            value: name
+          }, {
+            type: "input",
+            name: `header-${_headerCount}_value`,
+            inputWidth: 350,
+            labelWidth: 50,
+            label: "Value",
+            value: value
+          }]
+        })
+      }
+      // 添加Body
     let _bodyCount = 0;
     const _addBody = (name = '', value = '') => {
-      _bodyCount++;
-      form.addItem('body', {
-        type: "fieldset",
-        label: `#${_bodyCount}`,
-        inputWidth: 480,
-        list: [{
-          type: "input",
-          name: `body-${_bodyCount}_name`,
-          inputWidth: 350,
-          labelWidth: 50,
-          label: "Name",
-          value: name
-        }, {
-          type: "input",
-          name: `body-${_bodyCount}_value`,
-          inputWidth: 350,
-          labelWidth: 50,
-          label: "Value",
-          value: value
-        }]
-      })
-    }
-    // 监听toolbar事件
+        _bodyCount++;
+        form.addItem('body', {
+          type: "fieldset",
+          label: `#${_bodyCount}`,
+          inputWidth: 480,
+          list: [{
+            type: "input",
+            name: `body-${_bodyCount}_name`,
+            inputWidth: 350,
+            labelWidth: 50,
+            label: "Name",
+            value: name
+          }, {
+            type: "input",
+            name: `body-${_bodyCount}_value`,
+            inputWidth: 350,
+            labelWidth: 50,
+            label: "Value",
+            value: value
+          }]
+        })
+      }
+      // 监听toolbar事件
     toolbar.attachEvent('onClick', (id, e) => {
       switch (id) {
         case 'add-header':

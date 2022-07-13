@@ -1,8 +1,5 @@
 /**
- * PHP服务端脚本模板
- * 开写：2016/04/12
- * 更新：-
- * 作者：蚁逅 <https://github.com/antoor>
+ * CMDLinux 服务端脚本模板
  */
 'use strict';
 
@@ -10,6 +7,9 @@
 const Base = require('../base');
 
 class CMDLINUX extends Base {
+  static get supportRawBody() {
+    return true;
+  }
   constructor(opts) {
     super(opts);
     // 解析模板
@@ -45,14 +45,14 @@ class CMDLINUX extends Base {
   }
 
   get decoders() {
-    return ["default", "base64", "hex"];
-  }
-  /**
-   * HTTP请求数据组合函数
-   * @param  {Object} data 通过模板解析后的代码对象
-   * @param {bool} force_default 强制使用 default 解码
-   * @return {Promise}     返回一个Promise操作对象
-   */
+      return ["default", "base64", "hex"];
+    }
+    /**
+     * HTTP请求数据组合函数
+     * @param  {Object} data 通过模板解析后的代码对象
+     * @param {bool} force_default 强制使用 default 解码
+     * @return {Promise}     返回一个Promise操作对象
+     */
   complete(data, force_default = false) {
     // 分隔符号
     let tag_s, tag_e;

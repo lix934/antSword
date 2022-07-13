@@ -176,6 +176,8 @@ module.exports = {
       },
       otherConf: {
         nohttps: '忽略HTTPS證書',
+        userawbody: 'Body 設置為 RAW 模式',
+        userawbodyNotSupport: '當前所選Shell類型不支持 RAW Body 模式(RAW類型無需此項設置)',
         usemultipart: '使用 Multipart 發包',
         addMassData: '增加垃圾數據',
         randomPrefix: '隨機前綴長度',
