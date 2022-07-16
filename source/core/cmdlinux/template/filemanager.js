@@ -83,17 +83,17 @@ module.exports = (arg1, arg2, arg3) => ({
     _: `command_exists() { command -v "$@" > /dev/null 2>&1; };
     if command_exists md5sum; then 
       asmd5=$(md5sum #{path}|awk '{print $1}');
-      echo -n "MD5\\t$asmd5\\n";
+      echo -n "MD5\t$asmd5\n";
     elif command_exists busybox && busybox --list-modules | grep -q md5sum; then 
       asmd5=$(busybox md5sum #{path}|awk '{print $1}');
-      echo -n "MD5\\t$asmd5\\n";
+      echo -n "MD5\t$asmd5\n";
     fi;
     if command_exists sha1sum; then 
       assha1=$(sha1sum #{path}|awk '{print $1}');
-      echo -n "SHA1\\t$assha1\\n";
+      echo -n "SHA1\t$assha1\n";
     elif command_exists busybox && busybox --list-modules | grep -q sha1sum; then 
       assha1=$(busybox sha1sum #{path}|awk '{print $1}');
-      echo -n "SHA1\\t$assha1\\n";
+      echo -n "SHA1\t$assha1\n";
     fi;
     `.replace(/\n\s+/g, ''),
   },
