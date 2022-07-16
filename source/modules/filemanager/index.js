@@ -544,7 +544,7 @@ class FileManager {
       width: 800,
       height: 600,
     });
-    var filemime = mime.lookup(name);
+    var filemime = mime.getType(name);
     let savepath = PATH.join(process.env.AS_WORKDIR, `antData/.temp/`, Buffer.from(name).toString("hex"));
     win.cell.lastChild['style']['overflow'] = 'scroll';
     win.cell.lastChild['style']['textAlign'] = 'center';

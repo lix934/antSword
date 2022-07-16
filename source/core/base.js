@@ -316,12 +316,16 @@ class Base {
       opts: this.__opts__,
       rsa: this.rsaEncrypt()
     }
+    let useRaw = this.__opts__['type'].endsWith("raw") || (this.constructor.supportRawBody && (this.__opts__['otherConf'] || {})['use-raw-body'] === 1);
+
+    let useWebSocket = (this.__opts__['url'].startsWith('ws://') || this.__opts__['url'].startsWith('wss://'));
+
     return new Promise((res, rej) => {
-      console.log(this.__opts__['type'].endsWith("raw") || (this.constructor.supportRawBody && (this.__opts__['otherConf'] || {})['use-raw-body'] === 1))
-        // 随机ID(用于监听数据来源)
+      // 随机ID(用于监听数据来源)
       const hash = (String(+new Date) + String(Math.random()))
         .substr(10, 10)
         .replace('.', '_');
+      console.log(hash);
       // 监听数据返回
       antSword['ipcRenderer']
         // 请求完毕返回数据{text,buff}
@@ -369,7 +373,8 @@ class Base {
           addMassData: (this.__opts__['otherConf'] || {})['add-MassData'] === 1,
           randomPrefix: parseInt((this.__opts__['otherConf'] || {})['random-Prefix']),
           useRandomVariable: (this.__opts__['otherConf'] || {})['use-random-variable'] === 1,
-          useRaw: this.__opts__['type'].endsWith("raw") || (this.constructor.supportRawBody && (this.__opts__['otherConf'] || {})['use-raw-body'] === 1),
+          useRaw: useRaw,
+          useWebSocket: useWebSocket,
           timeout: parseInt((this.__opts__['otherConf'] || {})['request-timeout']),
           headers: (this.__opts__['httpConf'] || {})['headers'] || {},
           body: (this.__opts__['httpConf'] || {})['body'] || {}
@@ -386,6 +391,9 @@ class Base {
    */
   download(savePath, postCode, progressCallback) {
     const opt = this.complete(postCode, true);
+    let useRaw = this.__opts__['type'].endsWith("raw") || (this.constructor.supportRawBody && (this.__opts__['otherConf'] || {})['use-raw-body'] === 1);
+
+    let useWebSocket = (this.__opts__['url'].startsWith('ws://') || this.__opts__['url'].startsWith('wss://'));
     return new Promise((ret, rej) => {
       // 随机ID(用于监听数据来源)
       const hash = (String(+new Date) + String(Math.random()))
@@ -410,6 +418,7 @@ class Base {
         // 发送请求数据
         .send('download', {
           url: this.__opts__['url'],
+          pwd: this.__opts__['pwd'],
           hash: hash,
           path: savePath,
           data: opt['data'],
@@ -424,6 +433,8 @@ class Base {
           addMassData: (this.__opts__['otherConf'] || {})['add-MassData'] === 1,
           randomPrefix: parseInt((this.__opts__['otherConf'] || {})['random-Prefix']),
           useRandomVariable: (this.__opts__['otherConf'] || {})['use-random-variable'] === 1,
+          useRaw: useRaw,
+          useWebSocket: useWebSocket,
           timeout: parseInt((this.__opts__['otherConf'] || {})['request-timeout']),
           headers: (this.__opts__['httpConf'] || {})['headers'] || {},
           body: (this.__opts__['httpConf'] || {})['body'] || {}

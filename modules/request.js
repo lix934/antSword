@@ -11,11 +11,11 @@ const fs = require('fs'),
   through = require('through'),
   CONF = require('./config'),
   superagent = require('superagent'),
-  superagentProxy = require('superagent-proxy');
-const {
-  Readable
-} = require("stream");
-
+  superagentProxy = require('superagent-proxy'),
+  ws = require('ws');
+const { Readable } = require("stream");
+const ProxyAgent = require('proxy-agent');
+let wsclients = {};
 let logger;
 // 请求UA
 const USER_AGENT = require('random-fake-useragent');
@@ -166,6 +166,42 @@ class Request {
     }
   }
 
+  parseWebSocket(tag_s, tag_e, chunkCallBack, sock, callback) {
+    const tagHexS = Buffer.from(tag_s).toString('hex');
+    const tagHexE = Buffer.from(tag_e).toString('hex');
+    let foundTagS = false;
+    let foundTagE = false;
+    sock.data = '';
+    sock.on("message", function(chunk) {
+      let chunkHex = Buffer.from(chunk).toString('hex');
+      let temp = '';
+      if (chunkHex.indexOf(tagHexS) >= 0 && chunkHex.lastIndexOf(tagHexE) >= 0) {
+        let index_s = chunkHex.indexOf(tagHexS);
+        let index_e = chunkHex.lastIndexOf(tagHexE);
+        temp = chunkHex.substr(index_s + tagHexS.length, index_e - index_s - tagHexS.length);
+        foundTagS = foundTagE = // 如果只包含前截断，则截取后边
+          true;
+      } else if (chunkHex.indexOf(tagHexS) >= 0 && chunkHex.lastIndexOf(tagHexE) === -1) {
+        temp = chunkHex.split(tagHexS)[1];
+        foundTagS = // 如果只包含后截断，则截取前边
+          true;
+      } else if (chunkHex.indexOf(tagHexS) === -1 && chunkHex.lastIndexOf(tagHexE) >= 0) {
+        temp = chunkHex.split(tagHexE)[0];
+        foundTagE = // 如果有没有，那就是中途迷路的数据啦 ^.^
+          true;
+      } else if (foundTagS && !foundTagE) {
+        temp = chunkHex;
+      }
+      let finalData = Buffer.from(temp, 'hex');
+      chunkCallBack(finalData);
+      sock.data += finalData;
+    });
+    sock.on("close", function() {
+      logger.info(`ws onclose data.size=${sock.data.length}`, sock.data);
+      callback(null, Buffer.from(sock.data, 'binary'));
+    });
+  }
+
   /**
    * 监听HTTP请求
    * @param  {Object} event ipcMain事件对象
@@ -178,6 +214,50 @@ class Request {
     if (opts['url'].match(CONF.urlblacklist)) {
       return event.sender.send('request-error-' + opts['hash'], "Blacklist URL");
     }
+    // ws
+    if (opts['useWebSocket'] == 1) {
+      let wsopts = {
+        agent: new ProxyAgent(APROXY_CONF['uri']),
+      }
+      let sock = new ws(opts['url'], wsopts);
+      sock.on("open", function() {
+        let _tmp = encodeURIComponent(opts.data[opts['pwd']]).replace(/asunescape\((.+?)\)/g, function($, $1) {
+          return unescape($1);
+        });
+        _tmp = unescape(_tmp);
+        logger.debug('onRequest::wsopen-send', _tmp);
+        sock.send(_tmp);
+      });
+      sock.on("error", function(err) {
+        event.sender.send('request-error-' + opts['hash'], err);
+      });
+      self.parseWebSocket(opts['tag_s'], opts['tag_e'], (chunk) => {
+        event.sender.send('request-chunk-' + opts['hash'], chunk);
+        sock.close();
+      }, sock, (err, ret) => {
+        if (!ret) {
+          return event.sender.send('request-error-' + opts['hash'], err);
+        }
+        let buff = Buffer.from(ret);
+        let text = '';
+        let encoding = detectEncoding(buff, {
+          defaultEncoding: "unknown"
+        });
+        logger.debug("detect encoding:", encoding);
+        encoding = encoding != "unknown" ? encoding : opts['encode'];
+        text = iconv.decode(buff, encoding);
+        if (err && text == "") {
+          return event.sender.send('request-error-' + opts['hash'], err);
+        };
+        event.sender.send('request-' + opts['hash'], {
+          text: text,
+          buff: buff,
+          encoding: encoding
+        });
+      });
+      return;
+    };
+    // http
     self.reqContentType = "form";
     let _request = superagent.post(opts['url']);
     self.buildHeaders(_request, opts);
@@ -305,6 +385,38 @@ class Request {
     let indexStart = -1;
     let indexEnd = -1;
     let tempData = [];
+
+    // ws
+    if (opts['useWebSocket'] == 1) {
+      let wsopts = {
+        agent: new ProxyAgent(APROXY_CONF['uri']),
+      }
+      let sock = new ws(opts['url'], wsopts);
+      sock.on("open", function() {
+        let _tmp = encodeURIComponent(opts.data[opts['pwd']]).replace(/asunescape\((.+?)\)/g, function($, $1) {
+          return unescape($1);
+        });
+        _tmp = unescape(_tmp);
+        logger.debug('onDownlaod::wsopen-send', _tmp);
+        sock.send(_tmp);
+      });
+      sock.on("error", function(err) {
+        event.sender.send('download-error-' + opts['hash'], err);
+      });
+      self.parseWebSocket(opts['tag_s'], opts['tag_e'], (chunk) => {
+        event.sender.send('download-progress-' + opts['hash'], chunk.length);
+        sock.close();
+      }, sock, (err, ret) => {
+        if (!ret) {
+          return event.sender.send('download-error-' + opts['hash'], err);
+        }
+        rs.write(ret);
+        rs.close();
+        event.sender.send('download-' + opts['hash'], ret.length);
+      });
+      return;
+    };
+
     self.reqContentType = "form";
     let _request = superagent.post(opts['url']);
     // 设置headers
