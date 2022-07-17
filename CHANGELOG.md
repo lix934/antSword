@@ -2,7 +2,7 @@
 > 有空会补补BUG、添添新功能。    
 > 同时也欢迎大家的参与！感谢各位朋友的支持！ .TAT.
 
-## `v(2.1.15)`
+## 2022/07/17 `v(2.1.15)`
 
 ### 核心
 
@@ -70,17 +70,29 @@
 
 * 新增 FileHash 计算目标文件 hash 功能
 
-> 该功能目前正在逐步适配所有类型中 , 目前已经适配 PHP/PHP4/PSWindows/CMDLinux/JSP
+> 该功能目前正在逐步适配所有类型中 , 目前已经适配 PHP/PHP4/PSWindows/CMDLinux/JSP/JSPJS
 
 ### 后端模块
 
 * 支持自定义 Content-Type, 默认是 `form`
+
+superagent 支持的 type 简写如下, 当然也支持填写全称:
+
+```
+html: 'text/html',
+json: 'application/json',
+xml: 'text/xml',
+urlencoded: 'application/x-www-form-urlencoded',
+form: 'application/x-www-form-urlencoded',
+form-data: 'application/x-www-form-urlencoded'
+```
+
 * Fix #307
 * 重新规整 `modules/request.js` 代码结构
-* 调整 superagent ignoreHTTPS 注入,避免 npm upgrade之后引发问题
+* 调整 superagent `ignoreHTTPS` 注入,避免 npm upgrade之后引发问题
 * 支持 WebSocket 连接
 
-> 由于 ASP/ASPX/PHP/JSP/CUSTOM 类型每次请求时为多个参数，WebSocket连接之后Server端解析会较为困难，所以当前仅支持「RAW」类型: 「PHPRAW」、「CMDLinux」、「PSWindows」、「JSPJS」,未来会支持基于 defineClass 的 JSPRAW 类型
+> 由于 ASP/ASPX/ASPXCharp/PHP/JSP/CUSTOM 类型每次请求时为多个参数，WebSocket连接之后Server端解析会较为困难，所以当前仅支持「RAW」类型: 「PHPRAW」、「CMDLinux」、「PSWindows」、「JSPJS」,未来会支持基于 defineClass 的 JSPRAW 类型
 
 以 [wsMemShell](https://github.com/veo/wsMemShell) 项目中的 `wscmd` 为例:
 
