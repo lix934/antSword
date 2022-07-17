@@ -9,6 +9,9 @@
 const Base = require('../base');
 
 class JSPJS extends Base {
+  static get supportRawBody() {
+    return true;
+  }
   constructor(opts) {
     super(opts);
     // 解析模板
@@ -41,18 +44,18 @@ class JSPJS extends Base {
    * @return {array} 编码器列表
    */
   get encoders() {
-    return ["spelbase64","el","ognl"];
+    return ["spelbase64", "el", "ognl"];
   }
 
   get decoders() {
-    return ["default", "base64", "hex", "b64reverse", "b64rot13"];
-  }
-  /**
-   * HTTP请求数据组合函数
-   * @param  {Object} data 通过模板解析后的代码对象
-   * @param {bool} force_default 强制使用 default 解码
-   * @return {Promise}     返回一个Promise操作对象
-   */
+      return ["default", "base64", "hex", "b64reverse", "b64rot13"];
+    }
+    /**
+     * HTTP请求数据组合函数
+     * @param  {Object} data 通过模板解析后的代码对象
+     * @param {bool} force_default 强制使用 default 解码
+     * @return {Promise}     返回一个Promise操作对象
+     */
   complete(data, force_default = false) {
     // 分隔符号
     let tag_s, tag_e;
@@ -86,7 +89,7 @@ class JSPJS extends Base {
     }
     // 组合完整的代码
     let tmpCode = data['_'];
-    
+
     data['_'] = `
     try {
       load("nashorn:mozilla_compat.js");

@@ -47,8 +47,7 @@
 
 * JSPJS 兼容各种表达式注入
 
-> 具体请看 spelbase64、el、ognl 这三个内置编码器样例
-
+> 具体请看 spelbase64、el、ognl 这三个内置编码器样例, 详细请参考[Java表达式注入的武器化利用](https://mp.weixin.qq.com/s/nCvAICapO8NX--VfToLcwQ)
 
 ### 数据管理
 
@@ -58,6 +57,7 @@
 * 新增配置选项「Body 设置为 RAW 模式」
 
 > 勾选该选项后，只会发送 `pwd` 键下的内容，不会发送键值
+> 目前生效的类型有: 「PHPRAW」、「CMDLinux」、「PSWindows」、「JSPJS」
 
 主要场景如下:
 
@@ -70,7 +70,7 @@
 
 * 新增 FileHash 计算目标文件 hash 功能
 
-> 该功能目前正在逐步适配所有类型中 (PHP/PHP4/PSWindows/CMDLinux/JSP)
+> 该功能目前正在逐步适配所有类型中 , 目前已经适配 PHP/PHP4/PSWindows/CMDLinux/JSP
 
 ### 后端模块
 
@@ -78,10 +78,9 @@
 * Fix #307
 * 重新规整 `modules/request.js` 代码结构
 * 调整 superagent ignoreHTTPS 注入,避免 npm upgrade之后引发问题
-* 
 * 支持 WebSocket 连接
 
-> 由于 ASP/ASPX/PHP/JSP/JSPJS 类型每次请求时为多个参数，WebSocket连接之后Server端解析会较为困难，所以当前仅支持「RAW」类型: 「PHPRAW」、「CMDLinux」、「PSWindows」,未来会支持基于 defineClass 的 JSPRAW 类型
+> 由于 ASP/ASPX/PHP/JSP/CUSTOM 类型每次请求时为多个参数，WebSocket连接之后Server端解析会较为困难，所以当前仅支持「RAW」类型: 「PHPRAW」、「CMDLinux」、「PSWindows」、「JSPJS」,未来会支持基于 defineClass 的 JSPRAW 类型
 
 以 [wsMemShell](https://github.com/veo/wsMemShell) 项目中的 `wscmd` 为例:
 
