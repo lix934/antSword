@@ -14,7 +14,7 @@
       importPackage(Packages.java.util);
       var ret = "";
       try {
-        ret = new Base64().getEncoder().encodeToString(str.getBytes());
+        ret = Base64.getEncoder().encodeToString(str.getBytes());
       } catch (e) {
         ret = new BASE64Encoder().encode(str.getBytes());
       }

@@ -148,7 +148,7 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
       importPackage(Packages.java.util);
       var ret = "";
       try {
-        ret = new Base64().getEncoder().encodeToString(str.getBytes());
+        ret = Base64.getEncoder().encodeToString(str.getBytes());
       } catch (e) {
         ret = new BASE64Encoder().encode(str.getBytes());
       }
