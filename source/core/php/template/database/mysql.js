@@ -92,7 +92,7 @@ module.exports = (arg1, arg2, arg3, arg4, arg5, arg6) => ({
     [arg2]: '#{newbase64::user}',
     [arg3]: '#{newbase64::passwd}',
     [arg4]: '#{newbase64::db}',
-    [arg5]: '#{newbase64::::sql}',
+    [arg5]: '#{newbase64::sql}',
     [arg6]: '#{newbase64::encode}'
   }
 })
