@@ -18,9 +18,9 @@ class ASPXCSHARP extends Base {
       "base",
       "command",
       "filemanager",
-      'database/sqlserver',
-      'database/mysql',
-      'database/oracle'
+      "database/sqlserver",
+      "database/mysql",
+      "database/oracle",
     ].map((_) => {
       this.parseTemplate(`./aspxcsharp/template/${_}`);
     });
@@ -53,18 +53,30 @@ class ASPXCSHARP extends Base {
   complete(data, force_default = false) {
     // 分隔符号
     let tag_s, tag_e;
-    // if (this.__opts__['otherConf'].hasOwnProperty('use-custom-datatag') && this.__opts__['otherConf']['use-custom-datatag'] == 1 && this.__opts__['otherConf']['custom-datatag-tags']) {
-    //   tag_s = this.__opts__['otherConf']['custom-datatag-tags'];
-    // } else {
-    //   tag_s = Math.random().toString(16).substr(2, parseInt(Math.random() * 8 + 5)); // "->|";
-    // }
-    // if (this.__opts__['otherConf'].hasOwnProperty('use-custom-datatag') && this.__opts__['otherConf']['use-custom-datatag'] == 1 && this.__opts__['otherConf']['custom-datatag-tage']) {
-    //   tag_e = this.__opts__['otherConf']['custom-datatag-tage'];
-    // } else {
-    //   tag_e = Math.random().toString(16).substr(2, parseInt(Math.random() * 8 + 5)); // "|<-";
-    // }
-    tag_s = "->|";
-    tag_e = "|<-";
+    if (
+      this.__opts__["otherConf"].hasOwnProperty("use-custom-datatag") &&
+      this.__opts__["otherConf"]["use-custom-datatag"] == 1 &&
+      this.__opts__["otherConf"]["custom-datatag-tags"]
+    ) {
+      tag_s = this.__opts__["otherConf"]["custom-datatag-tags"];
+    } else {
+      tag_s = Math.random()
+        .toString(16)
+        .substr(2, parseInt(Math.random() * 8 + 5)); // "->|";
+    }
+    if (
+      this.__opts__["otherConf"].hasOwnProperty("use-custom-datatag") &&
+      this.__opts__["otherConf"]["use-custom-datatag"] == 1 &&
+      this.__opts__["otherConf"]["custom-datatag-tage"]
+    ) {
+      tag_e = this.__opts__["otherConf"]["custom-datatag-tage"];
+    } else {
+      tag_e = Math.random()
+        .toString(16)
+        .substr(2, parseInt(Math.random() * 8 + 5)); // "|<-";
+    }
+    // tag_s = "->|";
+    // tag_e = "|<-";
 
     let aspxencode = this.__opts__["encode"];
 
@@ -75,6 +87,10 @@ class ASPXCSHARP extends Base {
       default:
         break;
     }
+    let randomPrefix = this.__opts__.otherConf["random-Prefix"];
+    data["version"] = Buffer.from(`${randomPrefix};${tag_s};${tag_e}`).toString(
+      "base64"
+    );
 
     return this.encodeComplete(tag_s, tag_e, data);
   }
