@@ -2,4 +2,4 @@
 
 More at: https://github.com/AntSwordProject/AntSword-JSP-Template
 
-Version: 1.6-[54316e2](https://github.com/AntSwordProject/AntSword-JSP-Template/commit/54316e2475cea0c069eadf636cb3fce0265c0685)
+Version: 1.7-[6def23](https://github.com/AntSwordProject/AntSword-JSP-Template/commit/6def23a0c5dd158c1de78ea479164731ab62240f)
