@@ -1,5 +1,5 @@
 //
-// 数据库驱动::ASMX
+// 数据库驱动::ASPXRAW
 //
 
 module.exports = require('../aspx/index');
