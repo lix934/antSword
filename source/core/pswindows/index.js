@@ -85,18 +85,8 @@ class PSWINDOWS extends Base {
     return this.encodeComplete(tag_s, tag_e, data);
   }
 
-  // https://stackoverflow.com/questions/17913609/javascript-unicode-base64-encode
   Base64UTF16(cmd) {
-    var ar = new Array(cmd.length * 2),
-      i, j, s, b64;
-    // build array of bytes
-    for (i = 0, j = 0; i < cmd.length; j = 2 * ++i) {
-      ar[j] = cmd.charCodeAt(i);
-    }
-    // build string from array
-    s = String.fromCharCode.apply(String, ar);
-    // to base64
-    b64 = btoa(s);
+    let b64 = Buffer.from(cmd,'utf16le').toString("base64"); // 修复中文报错
     return b64;
   }
 }
