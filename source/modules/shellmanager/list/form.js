@@ -484,6 +484,7 @@ class Form {
       'terminal-cache': 0,
       'filemanager-cache': 1,
       'upload-fragment': '500',
+      'upload-fragment-intervals': '1000',
       'request-timeout': '10000',
       'command-path': '',
       'use-custom-datatag': 0,
@@ -674,6 +675,37 @@ class Form {
             '100',
             '50',
             '10'
+          ])
+        }, {
+          type: "label",
+          label: LANG['list']['otherConf']['uploadFragmentIntervals']
+        }, {
+          type: "combo",
+          label: '/ms',
+          inputWidth: 100,
+          name: "upload-fragment-intervals",
+          options: ((items) => {
+            let ret = [];
+            // 如果自定义的路径不在items里，则++
+            if (items.indexOf(opt['upload-fragment-intervals']) === -1) {
+              items.unshift(opt['upload-fragment-intervals']);
+            }
+            items.map((_) => {
+              ret.push({
+                text: _,
+                value: _,
+                selected: opt['upload-fragment-intervals'] === _
+              })
+            });
+            return ret;
+          })([
+            '10000',
+            '5000',
+            '3000',
+            '2000',
+            '1000',
+            '500',
+            '100'
           ])
         }, {
           type: "label",

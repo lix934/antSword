@@ -194,6 +194,7 @@ module.exports = {
         terminalCache: '虚拟终端使用缓存',
         filemanagerCache: '文件管理使用缓存',
         uploadFragment: '上传文件分片大小',
+        uploadFragmentIntervals: '文件分片上传请求间隔',
         requestTimeout: '请求超时',
         commandPath: '自定义终端执行路径',
         customDatatag: {

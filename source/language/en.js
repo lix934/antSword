@@ -194,6 +194,7 @@ module.exports = {
         terminalCache: "Use the terminal's cache",
         filemanagerCache: "Use the filemanager's cache",
         uploadFragment: "Upload File Fragmentation Size",
+        uploadFragmentIntervals: 'File upload request interval',
         requestTimeout: 'Request timeout',
         commandPath: 'Custom terminal-execPath',
         customDatatag: {

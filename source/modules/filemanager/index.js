@@ -823,13 +823,21 @@ class FileManager {
               ).then((res) => {
                 let ret = res['text'];
                 if (ret === '1') {
-                  return uploadBuffFunc(_buff);
+                  // 默认分片间隔1000ms
+                  let upload_fragement_intervals = 1000;
+                  if (parseInt((this.opts.otherConf || {})['upload-fragment-intervals']) > 0) {
+                    upload_fragement_intervals = parseInt((this.opts.otherConf || {})['upload-fragment-intervals']);
+                  }
+                  return new Promise(resolve=>setTimeout(resolve, upload_fragement_intervals)).then(() => {
+                    uploadBuffFunc(_buff);
+                  });
+                }else{
+                  task.failed(LANG['upload']['task']['failed'](ret));
+                  toastr.error(LANG['upload']['error'](
+                    fileName,
+                    ret === '0' ? '' : `<br/>${ret}`
+                  ), LANG_T['error']);
                 }
-                task.failed(LANG['upload']['task']['failed'](ret));
-                toastr.error(LANG['upload']['error'](
-                  fileName,
-                  ret === '0' ? '' : `<br/>${ret}`
-                ), LANG_T['error']);
               }).catch((err) => {
                 // 出错后友好提示
                 let errmsg = err;
